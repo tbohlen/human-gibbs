@@ -39,7 +39,7 @@ any point can be reconstructed by the list of moves.
 
 #### Moves
 A move is defined the fields `'id'`, `'old_group'`, `'new_group'`, `'old_x'`,
-`'new_x'`, `'old_y'`, `'new_y'`.  It's pretty self-explanatory.
+`'new_x'`, `'old_y'`, `'new_y'`, `'time_elapsed'`.  It's pretty self-explanatory.
 
 ### Image Sets
 
