@@ -108,7 +108,7 @@ function getGroup(pos) {
  */
 function loadImages() {
     var i;
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 1; i++) {
         var newImage = new Image(IMAGES, gibbs.game, i.toString());
         gibbs.images.push(newImage);
     }
