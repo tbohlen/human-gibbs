@@ -1,0 +1,35 @@
+html {
+    font-family: helvetica;
+    font-size: 16px;
+    color: #222222;
+}
+body {
+    margin: 0px;
+    border: 0px;
+    padding: 0px;
+}
+
+
+/* our classes */
+#container {
+    width: 1000px;
+    margin: auto;
+    background-color: #EEEEEE;
+}
+#top {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 37px;
+    width: 100%;
+    background-color: #9999BB;
+    border-bottom: 2px solid #BBBBEE;
+    padding-top: 13px;
+    padding-left: 12px;
+    font-size: 24px;
+    line-height: 24px;
+}
+#game {
+    margin: auto;
+    background-color: #BBBBBB;
+}
