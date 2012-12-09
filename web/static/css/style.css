@@ -1,35 +1,158 @@
 html {
     font-family: helvetica;
-    font-size: 16px;
+    font-size: 18px;
     color: #222222;
 }
 body {
     margin: 0px;
     border: 0px;
     padding: 0px;
+    background-color: #FFFFFF;
 }
 
 
 /* our classes */
-#container {
-    width: 1000px;
-    margin: auto;
-    background-color: #EEEEEE;
-}
 #top {
     position: absolute;
     top: 0px;
     left: 0px;
-    height: 37px;
+    height: 36px;
     width: 100%;
-    background-color: #9999BB;
-    border-bottom: 2px solid #BBBBEE;
-    padding-top: 13px;
-    padding-left: 12px;
-    font-size: 24px;
+    background-color: #6688DD;
+    border-bottom: 2px solid #112233;
+    padding-top: 12px;
+    padding-left: 16px;
     line-height: 24px;
 }
 #game {
+    position: relative;
+    top: 50px;
     margin: auto;
-    background-color: #BBBBBB;
+    background-color: #AAAAB0;
+    border: 2px solid #9999A0;
+    border-top: 0px;
+    border--moz-border-radius: 0px 0px 20px 20px;
+    -webkit-border-radius: 0px 0px 20px 20px; 
+    border-radius: 0px 0px 20px 20px;
+    width: 1000px;
+    height: 700px;
+    margin: auto;
+}
+
+/*
+ * Class: image;
+ * A moveable game object
+ */
+.image {
+    display: block;
+    position: absolute;
+    border: 2px solid #9999A0;
+    width: 100px;
+    height: 100px;
+}
+
+/*
+ * Style: .dragImage
+ * A moveable game image being moved
+ */
+.dragImage {
+    -moz-box-shadow: 2px 2px 2px 2px #222222;
+    -webkit-box-shadow: 2px 2px 2px 2px #222222;
+    box-shadow: 2px 2px 2px 2px #222222;
+    /* For IE 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=2, Direction=-45, Color='#222222')";
+    /* For IE 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.Shadow(Strength=2, Direction=45, Color='#222222');
+}
+
+/*
+ * Style: .group
+ * A group in the game
+ */
+.group {
+    background-color: #4466BB;
+    position: absolute;
+    width: 200px;
+    height: 200px;
+}
+
+/*
+ * ID: title
+ * Style for the page title
+ */
+#title {
+    font-size: 24px;
+}
+
+/*
+ * ID: addGroup
+ * addGroup Button
+ */
+#addGroup {
+    display:block;
+    position: absolute;
+    right: 32px;
+    top: 10px;
+    height: 26px;
+    width: 150px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #9999A0;
+    background-color: #555555;
+    -moz-border-radius: 4px 4px 4px 4px;
+    -webkit-border-radius: 4px 4px 4px 4px; 
+    border-radius: 4px 4px 4px 4px;
+}
+#addGroup:hover {
+    background-color: #888888;
+}
+
+/*
+ * ID: warning
+ * Screen warning user they can't do that
+ */
+#warning {
+    display:none;
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 5px solid rgba(0, 0, 0, 1);
+    color: #FFFFFF;
+    width: 200px;
+    height: 100px;
+    z-index: 100;
+}
+
+/*
+ * ID: warningText
+ * Text inside the warning
+ */
+#warningText {
+    margin: 5px;
+    width: auto;
+    height: auto;
+}
+
+/*
+ * ID: warnButton
+ * Button to clear the warn screen
+ */
+#warnButton {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    font-size: 20px;
+    color: #AA9999;
+    border: 1px solid #AA9999;
+    background-color: #555555;
+}
+#warnButton:hover {
+    background-color: #888888;
+}
+
+.unselectable {
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
