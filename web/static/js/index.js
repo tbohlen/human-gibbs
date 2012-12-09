@@ -2,7 +2,7 @@ var MARGIN = 100;
 var TOP_MARGIN = 50;
 var BOTTOM_MARGIN = 50;
 var IMAGES = "http://placekitten.com/g/100/100"
-var IMAGE_SIZE = 100;
+var IMAGE_SIZE = 102;
 
 // create a place for us to store important variables on the doc
 var gibbs = {};
@@ -56,12 +56,11 @@ function clamp(low, high, val) {
  */
 function objectForID(gibbsID) {
     var regex = /^g.+/;
-    if (regex.test(gibbsID)) {
+    if (regex.exec(gibbsID)) {
         var index = parseInt(gibbsID.substr(1), 10);
         return gibbs.groups[index];
     }
     else {
-        console.log('found ' + gibbsID);
         var index = parseInt(gibbsID, 10);
         return gibbs.images[index];
     }
@@ -90,7 +89,7 @@ function getGroup(pos) {
     for (i = 0; i < gibbs.groups.length; i++) {
         var group = gibbs.groups[i];
         if (group.pointInside(pos)) {
-            return group.gibbsID;
+            return group.id;
         }
     }
     return -1;
@@ -117,7 +116,7 @@ function loadImages() {
  */
 function loadGroups() {
     gibbs.groups = [];
-    var newGroup = new Group([10, 10], [300, 300], "g1");
+    var newGroup = new Group([10, 10], [300, 300], "g0");
     newGroup.addToScreen();
     gibbs.groups.push(newGroup);
 }
@@ -226,11 +225,16 @@ Image.prototype.startDrag = function(ev, pos) {
  * Member Of: Image
  */
 Image.prototype.endDrag = function(ev, pos) {
-    var groupIndex = getGroup(pos);
-    if (groupIndex == -1) {
+    var groupID = getGroup(pos);
+    if (groupID == -1) {
         this.moveTo(this.lastSolidPos);
     }
     else {
+        // modify the position so that it is inside the group
+        var group = objectForID(groupID);
+        this.perfectPos[0] = clamp(group.pos[0], group.pos[0] + group.size[0] - IMAGE_SIZE - 1, this.perfectPos[0]);
+        this.perfectPos[1] = clamp(group.pos[1], group.pos[1] + group.size[1] - IMAGE_SIZE - 1, this.perfectPos[1]);
+        this.moveTo(this.perfectPos);
         this.lastSolidPos = [this.pos[0], this.pos[1]];
         // TODO: save data!
         // TODO: modify position so fully inside group
