@@ -141,13 +141,15 @@ function warn(text) {
  * Shows the next image in the next image area.
  */
 function showImage() {
-    if (gibbs.nextImage < gibbs.images.length) {
+    if (gibbs.nextImage >= gibbs.images.length) {
         $('#noMoreImages').show();
     }
-    var image = gibbs.images[gibbs.nextImage];
-    image.moveTo([-116, 30]);
-    image.addToScreen();
-    gibbs.nextImage++;
+    else {
+        var image = gibbs.images[gibbs.nextImage];
+        image.moveTo([-116, 30]);
+        image.addToScreen();
+        gibbs.nextImage++;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -278,7 +280,6 @@ Image.prototype.endDrag = function(ev, pos) {
         }
         // modify the position so that it is inside the group
         var group = objectForID(groupID);
-        console.log("before is " + this.perfectPos[0] + ", " + this.perfectPos[1]);
         this.perfectPos[0] = clamp(group.pos[0], group.pos[0] + group.size[0] - IMAGE_SIZE - 1, this.perfectPos[0]);
         this.perfectPos[1] = clamp(group.pos[1], group.pos[1] + group.size[1] - IMAGE_SIZE - 1, this.perfectPos[1]);
         this.moveTo(this.perfectPos);
@@ -416,9 +417,6 @@ $(document).ready(function() {
         if (groupNum < GROUP_ROW * GROUP_COL) {
             var xNum = groupNum%4;
             var yNum = Math.floor(groupNum/4);
-            console.log(groupNum);
-            console.log(xNum);
-            console.log(yNum);
             var newGroup = new Group([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)], gibbs.groupSize, "g" + groupNum);
             newGroup.addToScreen();
             gibbs.groups.push(newGroup);
