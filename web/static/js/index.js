@@ -1,4 +1,4 @@
-var MARGIN = 100;
+var MARGIN = 125;
 var TOP_MARGIN = 50;
 var BOTTOM_MARGIN = 50;
 var IMAGES = "http://placekitten.com/g/100/100"
@@ -11,6 +11,7 @@ var GROUP_COL = 2;
 var gibbs = {};
 gibbs.dragObj = null;
 gibbs.lastMousePos = [0, 0];
+gibbs.nextImage = 0;
 
 /*
  * Function: cancel
@@ -108,7 +109,6 @@ function loadImages() {
     gibbs.images = [];
     for (i = 0; i < 10; i++) {
         var newImage = new Image(IMAGES, gibbs.game, i.toString());
-        newImage.addToScreen();
         gibbs.images.push(newImage);
     }
 }
@@ -136,6 +136,20 @@ function warn(text) {
     warning.show();
 }
 
+/*
+ * Function: showImage
+ * Shows the next image in the next image area.
+ */
+function showImage() {
+    if (gibbs.nextImage < gibbs.images.length) {
+        $('#noMoreImages').show();
+    }
+    var image = gibbs.images[gibbs.nextImage];
+    image.moveTo([-116, 30]);
+    image.addToScreen();
+    gibbs.nextImage++;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////// Image Object ////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -150,6 +164,7 @@ function Image(url, container, id) {
     var x = Math.random() * (container.innerWidth() - IMAGE_SIZE);
     var y = Math.random() * (container.innerHeight() - IMAGE_SIZE);
     this.pos = [x, y];
+    this.unstaged = false;
 
     // is the last known "ok" position of the object
     // generally this means it
@@ -190,8 +205,14 @@ Image.prototype.move = function(delta) {
     var newPos = [this.perfectPos[0] + delta[0], this.perfectPos[1] + delta[1]];
     this.perfectPos = [newPos[0], newPos[1]];
     
-    this.pos[0] = clamp(0, gibbs.game.innerWidth() - IMAGE_SIZE - 1, this.perfectPos[0]);
-    this.pos[1] = clamp(0, gibbs.game.innerHeight() - IMAGE_SIZE - 1, this.perfectPos[1]);
+    if (this.unstaged) {
+        this.pos[0] = clamp(0, gibbs.game.innerWidth() - IMAGE_SIZE - 1, this.perfectPos[0]);
+        this.pos[1] = clamp(0, gibbs.game.innerHeight() - IMAGE_SIZE - 1, this.perfectPos[1]);
+    }
+    else {
+        this.pos[0] = this.perfectPos[0];
+        this.pos[1] = this.perfectPos[1];
+    }
     this.object.css('left', this.pos[0]);
     this.object.css('top', this.pos[1])
 };
@@ -207,9 +228,14 @@ Image.prototype.move = function(delta) {
  */
 Image.prototype.moveTo = function(newPos) {
     this.perfectPos = [newPos[0], newPos[1]];
-    
-    this.pos[0] = clamp(0, gibbs.game.innerWidth() - IMAGE_SIZE - 1, this.perfectPos[0]);
-    this.pos[1] = clamp(0, gibbs.game.innerHeight() - IMAGE_SIZE - 1, this.perfectPos[1]);
+    if (this.unstaged) {
+        this.pos[0] = clamp(0, gibbs.game.innerWidth() - IMAGE_SIZE - 1, this.perfectPos[0]);
+        this.pos[1] = clamp(0, gibbs.game.innerHeight() - IMAGE_SIZE - 1, this.perfectPos[1]);
+    }
+    else {
+        this.pos[0] = this.perfectPos[0];
+        this.pos[1] = this.perfectPos[1];
+    }
     this.object.css('left', this.pos[0]);
     this.object.css('top', this.pos[1])
 };
@@ -245,14 +271,20 @@ Image.prototype.endDrag = function(ev, pos) {
         this.moveTo(this.lastSolidPos);
     }
     else {
+        // if not unstaged, mark as unstaged and stage next
+        if (!this.unstaged) {
+            this.unstaged = true;
+            showImage();
+        }
         // modify the position so that it is inside the group
         var group = objectForID(groupID);
+        console.log("before is " + this.perfectPos[0] + ", " + this.perfectPos[1]);
         this.perfectPos[0] = clamp(group.pos[0], group.pos[0] + group.size[0] - IMAGE_SIZE - 1, this.perfectPos[0]);
         this.perfectPos[1] = clamp(group.pos[1], group.pos[1] + group.size[1] - IMAGE_SIZE - 1, this.perfectPos[1]);
         this.moveTo(this.perfectPos);
         this.lastSolidPos = [this.pos[0], this.pos[1]];
+
         // TODO: save data!
-        // TODO: modify position so fully inside group
     }
     this.object.removeClass('dragImage');
 };
@@ -328,7 +360,7 @@ $(document).ready(function() {
     var game = $('#game');
     game.width(pageWidth - (MARGIN * 2))
         .height(pageHeight - TOP_MARGIN - BOTTOM_MARGIN);
-    gameHeight= game.height();
+    gameHeight = game.height();
     gameWidth = game.width();
     gibbs.game = game;
     gibbs.gameHeight = gameHeight;
@@ -339,6 +371,7 @@ $(document).ready(function() {
 
     loadImages();
     loadGroups();
+    showImage();
 
     // attach handlers
     
