@@ -18,8 +18,8 @@ body {
     left: 0px;
     height: 36px;
     width: 100%;
-    background-color: #9999BB;
-    border-bottom: 2px solid #CCCCDD;
+    background-color: #6688DD;
+    border-bottom: 2px solid #112233;
     padding-top: 12px;
     padding-left: 16px;
     font-size: 24px;
@@ -29,8 +29,32 @@ body {
     position: relative;
     top: 50px;
     margin: auto;
-    background-color: #CCCCDD;
+    background-color: #AAAAB0;
+    border: 2px solid #9999A0;
+    border--moz-border-radius: 0px 0px 20px 20px;
+    -webkit-border-radius: 0px 0px 20px 20px; 
+    border-radius: 0px 0px 20px 20px;
     width: 1000px;
     height: 700px;
     margin: auto;
+}
+
+/*
+ * Class: object;
+ * A moveable game object
+ */
+.object {
+    display: block;
+    position: absolute;
+    border: 2px solid #9999A0;
+    width: 100px;
+    height: 100px;
+}
+
+/*
+ * Style: .group
+ * A group in the game
+ */
+.group {
+    color: blue;
 }
