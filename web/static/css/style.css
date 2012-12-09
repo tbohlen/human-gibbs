@@ -7,29 +7,30 @@ body {
     margin: 0px;
     border: 0px;
     padding: 0px;
+    background-color: #FFFFFF;
 }
 
 
 /* our classes */
-#container {
-    width: 1000px;
-    margin: auto;
-    background-color: #EEEEEE;
-}
 #top {
     position: absolute;
     top: 0px;
     left: 0px;
-    height: 37px;
+    height: 36px;
     width: 100%;
     background-color: #9999BB;
-    border-bottom: 2px solid #BBBBEE;
-    padding-top: 13px;
-    padding-left: 12px;
+    border-bottom: 2px solid #CCCCDD;
+    padding-top: 12px;
+    padding-left: 16px;
     font-size: 24px;
     line-height: 24px;
 }
 #game {
+    position: relative;
+    top: 50px;
     margin: auto;
-    background-color: #BBBBBB;
+    background-color: #CCCCDD;
+    width: 1000px;
+    height: 700px;
+    margin: auto;
 }
