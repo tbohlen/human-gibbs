@@ -12,6 +12,8 @@ var gibbs = {};
 gibbs.dragObj = null;
 gibbs.lastMousePos = [0, 0];
 gibbs.nextImage = 0;
+gibbs.groups = [];
+gibbs.images = [];
 
 /*
  * Function: cancel
@@ -106,7 +108,6 @@ function getGroup(pos) {
  */
 function loadImages() {
     var i;
-    gibbs.images = [];
     for (i = 0; i < 10; i++) {
         var newImage = new Image(IMAGES, gibbs.game, i.toString());
         gibbs.images.push(newImage);
@@ -118,7 +119,6 @@ function loadImages() {
  * Creates the first group on screen
  */
 function loadGroups() {
-    gibbs.groups = [];
     var newGroup = new Group([GROUP_MARGIN/2, GROUP_MARGIN/2], gibbs.groupSize, "g0");
     newGroup.addToScreen();
     gibbs.groups.push(newGroup);
@@ -152,6 +152,32 @@ function showImage() {
     }
 }
 
+/*
+ * Function: sizeDocument
+ * Sizes all resizable objects in the document
+ */
+function sizeDocument() {
+    var pageHeight = document.height;
+    var pageWidth = document.width;
+    var i;
+    gibbs.game.width(pageWidth - (MARGIN * 2))
+        .height(pageHeight - TOP_MARGIN - BOTTOM_MARGIN);
+    gameHeight = gibbs.game.height();
+    gameWidth = gibbs.game.width();
+    gibbs.gameHeight = gameHeight;
+    gibbs.gameWidth = gameWidth;
+
+    gibbs.groupSize = [(gameWidth/4) - GROUP_MARGIN, (gameHeight/2) - GROUP_MARGIN];
+
+    for (i = 0; i < gibbs.groups.length; i++) {
+        var xNum = i%4;
+        var yNum = Math.floor(i/4);
+        var group = gibbs.groups[i];
+        group.moveTo([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)]);
+        group.resize(gibbs.groupSize);
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////// Image Object ////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -176,7 +202,8 @@ function Image(url, container, id) {
     this.perfectPos = [x, y];
 
     this.object = $(document.createElement('img'));
-    this.object.addClass('image')
+    this.object.addClass('image');
+    this.object.addClass('unselectable');
     this.object.attr('src', url);
     this.object.css('left', this.pos[0]);
     this.object.css('top', this.pos[1]);
@@ -270,7 +297,7 @@ Image.prototype.startDrag = function(ev, pos) {
 Image.prototype.endDrag = function(ev, pos) {
     var groupID = getGroup(pos);
     if (groupID == -1) {
-        this.moveTo(this.lastSolidPos);
+        this.cancelDrag(ev);
     }
     else {
         // if not unstaged, mark as unstaged and stage next
@@ -285,8 +312,22 @@ Image.prototype.endDrag = function(ev, pos) {
         this.moveTo(this.perfectPos);
         this.lastSolidPos = [this.pos[0], this.pos[1]];
 
+        this.object.removeClass('dragImage');
         // TODO: save data!
     }
+};
+
+/*
+ * Method: cancelDrag
+ * cancels a drag, dropping the image back at its lastSolidPos
+ *
+ * Parameters:
+ * ev - the event that triggered the cancel
+ *
+ * Member Of: Image
+ */
+Image.prototype.cancelDrag = function(ev) {
+    this.moveTo(this.lastSolidPos);
     this.object.removeClass('dragImage');
 };
 
@@ -348,6 +389,42 @@ Group.prototype.pointInside = function(point) {
         && point[1] > this.pos[1] && point[1] < this.pos[1] + this.size[1]);
 };
 
+/*
+ * Method: moveTo
+ * Moves the group to a new position
+ *
+ * Parameters:
+ * newPos - the new x and y coords
+ *
+ * Member Of: Group
+ */
+Group.prototype.moveTo = function(newPos) {
+    this.perfectPos = [newPos[0], newPos[1]];
+
+    this.pos[0] = clamp(0, gibbs.game.innerWidth() - IMAGE_SIZE - 1, this.perfectPos[0]);
+    this.pos[1] = clamp(0, gibbs.game.innerHeight() - IMAGE_SIZE - 1, this.perfectPos[1]);
+
+    this.object.css('left', this.pos[0]);
+    this.object.css('top', this.pos[1])
+};
+
+/*
+ * Method: resize
+ * Resizes the group
+ *
+ * Parameters:
+ * newSize - the new height and width of the group
+ *
+ * Member Of: Group
+ */
+Group.prototype.resize = function(newSize) {
+    // TODO: if implementing manual resizing of groups include perfectSize and
+    // clamping as in move and moveTo
+
+    this.object.css('width', newSize[0]);
+    this.object.css('height', newSize[1])
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Doc Ready Event Handler ///////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -356,19 +433,9 @@ Group.prototype.pointInside = function(point) {
  * Loads page on 'ready' event
  */
 $(document).ready(function() {
-    var pageHeight = document.height;
-    var pageWidth = document.width;
     var game = $('#game');
-    game.width(pageWidth - (MARGIN * 2))
-        .height(pageHeight - TOP_MARGIN - BOTTOM_MARGIN);
-    gameHeight = game.height();
-    gameWidth = game.width();
     gibbs.game = game;
-    gibbs.gameHeight = gameHeight;
-    gibbs.gameWidth = gameWidth;
-
-    gibbs.groupSize = [(gameWidth/4) - GROUP_MARGIN, (gameHeight/2) - GROUP_MARGIN];
-
+    sizeDocument();
 
     loadImages();
     loadGroups();
@@ -376,7 +443,7 @@ $(document).ready(function() {
 
     // attach handlers
     
-    gibbs.game.on('mousedown', '.image', function(ev) {
+    $(document).on('mousedown', '.image', function(ev) {
         // claim the drag
         var mousePos = gamePosition([ev.pageX, ev.pageY]);
         gibbs.dragObj = objectForID( $(this).data('gibbsID') );
@@ -389,19 +456,23 @@ $(document).ready(function() {
      * Event: game .image mouseup
      * Checks and handles the end of an image drag
      */
-    gibbs.game.on('mouseup', '.image', function(ev) {
+    $(document).on('mouseup', '.image', function(ev) {
         // release the drag, if necessary
         var mousePos = gamePosition([ev.pageX, ev.pageY]);
         if (gibbs.dragObj) {
-            // check this position
+            // move the object
+            var delta = [mousePos[0] - gibbs.lastMousePos[0], mousePos[1] - gibbs.lastMousePos[1]];
+            gibbs.dragObj.move(delta);
+
+            // end the drag and throw away the dragObj
             gibbs.dragObj.endDrag(ev, mousePos);
             gibbs.dragObj = null;
         }
         gibbs.lastMousePos = mousePos;
-        cancel(ev);
+        return cancel(ev);
     });
 
-    gibbs.game.on('mousemove', function(ev) {
+    $(document).on('mousemove', function(ev) {
         if (gibbs.dragObj) {
             // move the object
             var mousePos = gamePosition([ev.pageX, ev.pageY]);
@@ -409,6 +480,7 @@ $(document).ready(function() {
             gibbs.dragObj.move(delta);
         }
         gibbs.lastMousePos = mousePos;
+        return cancel(ev);
     });
 
     // when the addGroup button is clicked, add a group
@@ -427,5 +499,24 @@ $(document).ready(function() {
     });
     $('#warnButton').on('click', function(ev) {
         $('#warning').hide();
+    });
+
+    // mouseout on the document and game to avoid mouseup outside of window
+    $(document).on('mouseleave', function(ev) {
+        ev = ev ? ev : window.event;
+        var nextElement = ev.relatedTarget;
+        if (!nextElement || nextElement.nodeName == "HTML") {
+            if (gibbs.dragObj) {
+                // end the drag and throw away the dragObj to avoid issues with
+                // mouseup outside
+                gibbs.dragObj.cancelDrag(ev, gibbs.lastMousePos);
+                gibbs.dragObj = null;
+            }
+        }
+    });
+
+    $(window).on('resize', function(ev) {
+        sizeDocument();
+        cancel(ev);
     });
 });
