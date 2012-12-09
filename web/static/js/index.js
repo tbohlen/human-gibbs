@@ -3,6 +3,9 @@ var TOP_MARGIN = 50;
 var BOTTOM_MARGIN = 50;
 var IMAGES = "http://placekitten.com/g/100/100"
 var IMAGE_SIZE = 102;
+var GROUP_MARGIN = 10;
+var GROUP_ROW = 4;
+var GROUP_COL = 2;
 
 // create a place for us to store important variables on the doc
 var gibbs = {};
@@ -116,9 +119,21 @@ function loadImages() {
  */
 function loadGroups() {
     gibbs.groups = [];
-    var newGroup = new Group([10, 10], [300, 300], "g0");
+    var newGroup = new Group([GROUP_MARGIN/2, GROUP_MARGIN/2], gibbs.groupSize, "g0");
     newGroup.addToScreen();
     gibbs.groups.push(newGroup);
+}
+
+/*
+ * Function: warn
+ * Warns the player they can't do that
+ */
+function warn(text) {
+    var warning = $('#warning')
+    warning.css('top', (document.height - warning.height())/2);
+    warning.css('left', (document.width - warning.width())/2);
+    $('#warningText').text(text);
+    warning.show();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -319,6 +334,9 @@ $(document).ready(function() {
     gibbs.gameHeight = gameHeight;
     gibbs.gameWidth = gameWidth;
 
+    gibbs.groupSize = [(gameWidth/4) - GROUP_MARGIN, (gameHeight/2) - GROUP_MARGIN];
+
+
     loadImages();
     loadGroups();
 
@@ -357,5 +375,26 @@ $(document).ready(function() {
             gibbs.dragObj.move(delta);
         }
         gibbs.lastMousePos = mousePos;
+    });
+
+    // when the addGroup button is clicked, add a group
+    $('#addGroup').on('click', function(ev) {
+        var groupNum = gibbs.groups.length.toString();
+        if (groupNum < GROUP_ROW * GROUP_COL) {
+            var xNum = groupNum%4;
+            var yNum = Math.floor(groupNum/4);
+            console.log(groupNum);
+            console.log(xNum);
+            console.log(yNum);
+            var newGroup = new Group([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)], gibbs.groupSize, "g" + groupNum);
+            newGroup.addToScreen();
+            gibbs.groups.push(newGroup);
+        }
+        else {
+            warn('You cannot add any more groups');
+        }
+    });
+    $('#warnButton').on('click', function(ev) {
+        $('#warning').hide();
     });
 });
