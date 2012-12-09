@@ -40,10 +40,10 @@ body {
 }
 
 /*
- * Class: object;
+ * Class: image;
  * A moveable game object
  */
-.object {
+.image {
     display: block;
     position: absolute;
     border: 2px solid #9999A0;
@@ -52,9 +52,26 @@ body {
 }
 
 /*
+ * Style: .dragImage
+ * A moveable game image being moved
+ */
+.dragImage {
+    -moz-box-shadow: 2px 2px 2px 2px #222222;
+    -webkit-box-shadow: 2px 2px 2px 2px #222222;
+    box-shadow: 2px 2px 2px 2px #222222;
+    /* For IE 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=2, Direction=-45, Color='#222222')";
+    /* For IE 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.Shadow(Strength=2, Direction=45, Color='#222222');
+}
+
+/*
  * Style: .group
  * A group in the game
  */
 .group {
-    color: blue;
+    background-color: blue;
+    position: absolute;
+    width: 200px;
+    height: 200px;
 }
