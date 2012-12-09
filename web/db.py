@@ -69,14 +69,28 @@ def write_image_set(image_set_name, target_dir):
             f.write(image.read())
         i += 1
     
-# add a trial to the system, returns the ID for the trial. 
+# add a trial to the system, returns string of the ID for the trial. 
 def add_trial(init_state, image_set_name):
     image_set = db.images.find_one({'name': image_set_name})
-    return db.trials.insert({'init_state': init_state,
-                             'moves': [],
-                             'image_set': DBRef('images', image_set['_id'])})
+    trial_id = db.trials.insert({'init_state': init_state,
+                                 'moves': [],
+                                 'image_set': DBRef('images', image_set['_id'])})
+    return str(trial_id)
 
 # add a move to a trial. Takes the trial ID as a string
 def add_move(trial_id, move):
-    db.trials.update({'_id': ObjectId(trial_id)},
-                     {'$push': {'moves': move}})
+    return db.trials.update({'_id': ObjectId(trial_id)},
+                            {'$push': {'moves': move}})
+
+# checks a dict representing a move to make sure it has all the required fields
+def has_move_fields(move):
+    move_fields = ['id', 'old_group', 'new_group', 'old_x', 'new_x',
+                   'old_y', 'new_y', 'time_elapsed']
+
+    # make sure each field is in the dict
+    for field in move_fields:
+        if field not in move:
+            return False
+
+    # if here, it must have all the fields
+    return True

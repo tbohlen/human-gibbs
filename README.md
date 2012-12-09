@@ -39,7 +39,11 @@ any point can be reconstructed by the list of moves.
 
 #### Moves
 A move is defined the fields `'id'`, `'old_group'`, `'new_group'`, `'old_x'`,
-`'new_x'`, `'old_y'`, `'new_y'`, `'time_elapsed'`.  It's pretty self-explanatory.
+`'new_x'`, `'old_y'`, `'new_y'`, `'time_elapsed'`.  The `'id'` field refers to
+the object that was moved, the "old" keys refer to the state of the object
+before the move, the "new" keys refer to the state of the objects after the
+move, and `'time_elapsed'` refers to the time that the user took to make the
+move. 
 
 ### Image Sets
 
