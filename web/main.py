@@ -14,7 +14,7 @@ def hello():
     resp = make_response(render_template("index.html", hello=True))
 
     # create a new trail, get the id
-    trial_id = db.add_unstaged_trial('kittens') # TODO: choose actual set somehow
+    trial_id = db.add_unstaged_trial() # TODO: choose actual set somehow
 
     # store the ID as a cookie and return the generated HTML
     resp.set_cookie('trial_id', trial_id)
@@ -47,7 +47,7 @@ def images():
     # get a list of image names
     image_names = db.image_names(db.get_image_set(trial_id))
 
-    image_urls = ['/images/' + name for name in image_names]
+    image_urls = ['/images/' + str(i) for i in range(len(image_names))]
 
     return json.dumps(image_urls)
 
@@ -59,8 +59,7 @@ def image(image_num):
     # get the image
     image = db.get_image_file(trial_id, image_num)
 
-    return send_file(image, mimetype=image.content_type)
+    return send_file(image, mimetype=image.content_type, cache_timeout=0)
 
-    
 if __name__ == "__main__":
     app.run()

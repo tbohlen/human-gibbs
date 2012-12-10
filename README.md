@@ -25,7 +25,7 @@ collection stores holds the images used.
 The state is defined by a list of all the objects on the board. Each object has
 the fields `'id'`, `'group'`, `'x'`, `'y'`. The `'id'` field is unique within
 the trial and is linked with the image representing the object. The `'group'`
-field can be `-1` if it is unassigned. `x` and `y` are `-1` if the image is not
+field is `-1` if it is unassigned. `x` and `y` are `-1` if the image is not
 on the board yet. A sample object is shown below:
 
 ```python
@@ -49,6 +49,7 @@ move.
 ### Image Sets
 
 Each document in the images collection is simply composed of a `'name'` field
-and an `'image_ids'` field. The `'image_ids'` field is a list of ObjectIds in
+and an `'images'` field. The `'images'` field is a list of image dicts.  Each
+will have at least the key `'image_id'` corresponding to its ObjectIds in
 the GridFS system; to get the appropriate image need to run `fs.get(id)` from
-a GridFS object created for the 'human-gibbs' db
+a GridFS object created for the `'human-gibbs'` db

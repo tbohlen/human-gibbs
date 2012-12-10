@@ -132,8 +132,7 @@ def write_image_set(image_set_name, target_dir):
             f.write(image.read())
     
 # add a trial to the system, returns string of the ID for the trial. 
-def add_trial(init_state, image_set_name):
-    image_set = db.images.find_one({'name': image_set_name})
+def add_trial(init_state, image_set):
     trial_id = db.trials.insert({'init_state': init_state,
                                  'moves': [],
                                  'image_set': DBRef('images', image_set['_id'])})
@@ -146,9 +145,9 @@ def get_image_file(trial_id, image_number):
     return fs.get(image_id)
 
 # adds a trial based off an image set. All images are assumed to not start on
-# the board, i.e., all images are unstages
-def add_unstaged_trial(image_set_name):
-    image_set = db.images.find_one({'name': image_set_name})    
+# the board, i.e., all images are unstaged
+def add_unstaged_trial():
+    image_set = db.images.find_one()    
     num_images = len(image_set['images'])
     init_state = []
     for i in range(num_images):
@@ -157,7 +156,7 @@ def add_unstaged_trial(image_set_name):
                            'x': -1,
                            'y': -1})
 
-    return add_trial(init_state, image_set_name)
+    return add_trial(init_state, image_set)
 
 # add a move to a trial. Takes the trial ID as a string
 def add_move(trial_id, move):
