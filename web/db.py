@@ -17,6 +17,47 @@ def is_image(file_path):
     file_name, file_ext = splitext(file_path)
     return isfile(file_path) and file_ext in image_extensions
 
+
+# adds an image set. Uses the directory name for the folder path. Returns the
+# objectId for the image document
+#
+# The uses of ValueError and TypeError are stretches for their defined purpose,
+# but using different errors allows us to detect what went wrong in imageGen
+def add_image_set_by_array(images, parents, name):
+    # check for duplicate name
+    if db.images.find_one({'name': name}) != None:
+        raise ValueError(('An image set with the name %s already exists. Please ' +
+                         'change the folder name and try uploading again.') % name)
+
+    # put all the parent images into gridFS, save their object IDs
+    parent_list = []
+    for image in parent:
+        with open(image, 'rb') as f:
+            data = f.read()
+            content_type = guess_type(image)[0]
+            if content_type == None:
+                raise TypeError(('Couldn\'t guess the file extension for %s. ' +
+                                 'Check the filename.') % image)
+            parent_id = fs.put(data, content_type=content_type)
+            parent_list.append(parent_id)
+
+    # put all the images into gridFS, save their object IDs
+    image_list = []
+    for image in images:
+        with open(image.path, 'rb') as f:
+            data = f.read()
+            content_type = guess_type(image.path)[0]
+            if content_type == None:
+                raise TypeError(('Couldn\'t guess the file extension for %s. ' +
+                                 'Check the filename.') % image.path)
+            image_id = fs.put(data, content_type=content_type)
+            image_list.append({'image_id': image_id, 'parent' : parent_list[image.category], 'category': image.category})
+
+    # save the image set, return the 
+    return db.images.insert({'name': name,
+                             'parents': parent_list,
+                             'images': image_list})
+
 # adds an image set. Uses the directory name for the folder path. Returns the
 # objectId for the image document
 def add_image_set(dir_path):
