@@ -31,7 +31,7 @@ def add_image_set(dir_path):
                          'change the folder name and try uploading again.') % name)
 
     # put all the images into gridFS, save their object IDs
-    image_ids = []
+    image_list = []
     for image in images:
         with open(image, 'rb') as f:
             data = f.read()
@@ -40,11 +40,11 @@ def add_image_set(dir_path):
                 raise Exception(('Couldn\'t guess the file extension for %s. ' +
                                  'Check the filename.') % image)
             image_id = fs.put(data, content_type=content_type)
-            image_ids.append(image_id)
+            image_list.append({'image_id': image_id})
 
     # save the image set, return the 
     return db.images.insert({'name': name,
-                             'image_ids': image_ids})
+                             'images': image_list})
 
 # writes all the images in an image set to a desired folder location
 def write_image_set(image_set_name, target_dir):
@@ -57,9 +57,9 @@ def write_image_set(image_set_name, target_dir):
 
     # write image set to the directory
     i = 0 # index for filenames
-    for image_id in image_set['image_ids']:
+    for image_map in image_set['images']:
         # find the image
-        image = fs.get(image_id)
+        image = fs.get(image_map['image_id'])
 
         # choose the filename
         ext = guess_extension(image.content_type)
@@ -69,6 +69,15 @@ def write_image_set(image_set_name, target_dir):
         with open(name, 'wb') as f:
             f.write(image.read())
         i += 1
+
+def image_list(trial_id):
+    # find the trial
+    trial = db.trials.find_one({'_id': ObjectId(trial_id)})
+
+    # get the image set
+    image_set = db.dereference(trial['image_set'])
+
+    
     
 # add a trial to the system, returns string of the ID for the trial. 
 def add_trial(init_state, image_set_name):
@@ -82,7 +91,7 @@ def add_trial(init_state, image_set_name):
 # the board, i.e., all images are unstages
 def add_unstaged_trial(image_set_name):
     image_set = db.images.find_one({'name': image_set_name})    
-    num_images = len(image_set['image_ids'])
+    num_images = len(image_set['images'])
     init_state = []
     for i in range(num_images):
         init_state.append({'id': i,
