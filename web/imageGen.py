@@ -5,11 +5,6 @@ from os import listdir
 from os.path import join, basename
 import db
 
-def getBase():
-    return "/Users/t_bohlen/projects/me/human-gibbs/web/base-one"
-def getResults():
-    return "/Users/t_bohlen/projects/me/human-gibbs/web/results-one"
-
 """
 Function: generateMatrix
 Generates a randomized matrix based on the input image.
@@ -92,6 +87,7 @@ numPerImage - the number of random images to produce for each base image. If lef
 def generateRandomSets(baseFolder, resultFolder, randomization, numTotal, numPerImage=None):
     # get the base image files that we will be using to generate the image set
     baseImages = [join(baseFolder, f) for f in listdir(baseFolder)]
+    baseImages = filter(db.is_image, baseImages)
 
     # if numPerImage was not provided or is of the wrong length, generate it
     if not numPerImage or len(numPerImage) != len(baseImages):
