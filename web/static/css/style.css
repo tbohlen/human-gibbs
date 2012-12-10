@@ -66,11 +66,13 @@ body {
 #noMoreImages {
     margin: auto;
     width: 100px;
-    height: 100px;
-    position: relative;
-    top: 20px;
+    height: 70px;
     font-weight: bold;
     display: none;
+    border: 2px solid #9999A0;
+    background-color: #BBBBBB;
+    text-align: center;
+    padding-top: 30px;
 }
 
 /*
