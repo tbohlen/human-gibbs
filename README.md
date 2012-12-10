@@ -25,7 +25,8 @@ collection stores holds the images used.
 The state is defined by a list of all the objects on the board. Each object has
 the fields `'id'`, `'group'`, `'x'`, `'y'`. The `'id'` field is unique within
 the trial and is linked with the image representing the object. The `'group'`
-field can be `None` if it is unassigned. An sample object is shown below:
+field can be `-1` if it is unassigned. `x` and `y` are `-1` if the image is not
+on the board yet. A sample object is shown below:
 
 ```python
 {'id': 34,

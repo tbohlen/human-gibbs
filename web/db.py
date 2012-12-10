@@ -46,6 +46,7 @@ def add_image_set(dir_path):
     return db.images.insert({'name': name,
                              'image_ids': image_ids})
 
+# writes all the images in an image set to a desired folder location
 def write_image_set(image_set_name, target_dir):
     # make sure directory exists
     if not exists(target_dir):
@@ -76,6 +77,20 @@ def add_trial(init_state, image_set_name):
                                  'moves': [],
                                  'image_set': DBRef('images', image_set['_id'])})
     return str(trial_id)
+
+# adds a trial based off an image set. All images are assumed to not start on
+# the board, i.e., all images are unstages
+def add_unstaged_trial(image_set_name):
+    image_set = db.images.find_one({'name': image_set_name})    
+    num_images = len(image_set['image_ids'])
+    init_state = []
+    for i in range(num_images):
+        init_state.append({'id': i,
+                           'group': -1,
+                           'x': -1,
+                           'y': -1})
+
+    return add_trial(init_state, image_set_name)
 
 # add a move to a trial. Takes the trial ID as a string
 def add_move(trial_id, move):

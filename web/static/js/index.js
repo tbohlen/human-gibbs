@@ -163,10 +163,11 @@ function showImage() {
 function Image(url, container, id) {
     this.url = url;
     this.id = id;
-    var x = Math.random() * (container.innerWidth() - IMAGE_SIZE);
-    var y = Math.random() * (container.innerHeight() - IMAGE_SIZE);
+    var x = -1;
+    var y = -1;
     this.pos = [x, y];
     this.unstaged = false;
+    this.group = -1;
 
     // is the last known "ok" position of the object
     // generally this means it
@@ -283,9 +284,43 @@ Image.prototype.endDrag = function(ev, pos) {
         this.perfectPos[0] = clamp(group.pos[0], group.pos[0] + group.size[0] - IMAGE_SIZE - 1, this.perfectPos[0]);
         this.perfectPos[1] = clamp(group.pos[1], group.pos[1] + group.size[1] - IMAGE_SIZE - 1, this.perfectPos[1]);
         this.moveTo(this.perfectPos);
-        this.lastSolidPos = [this.pos[0], this.pos[1]];
 
-        // TODO: save data!
+        // save the data from the move
+        var groupIdAsInt = function(groupID) {
+            try {
+                return parseInt(groupID.substr(1));
+            } catch (e) {
+                return groupID;
+            }
+        };
+
+        var moveData = {
+            id: parseInt(this.id),
+            old_group: groupIdAsInt(this.group),
+            new_group: groupIdAsInt(groupID),
+            old_x: this.lastSolidPos[0],
+            new_x: this.pos[0],
+            old_y: this.lastSolidPos[1],
+            new_y: this.pos[1],
+            time_elapsed: 0
+        };
+
+        // post the move data in a form to the database
+        var moveForm = new FormData();
+        moveForm.append('move', JSON.stringify(moveData));
+        
+        $.ajax({
+          url: "/move",
+          data: moveForm,
+          processData: false,
+          contentType: false,
+          type: 'POST'
+        });
+
+        // update variables that store previous state
+        this.lastSolidPos = [this.pos[0], this.pos[1]];
+        this.group = groupID
+
     }
     this.object.removeClass('dragImage');
 };
@@ -347,6 +382,17 @@ Group.prototype.pointInside = function(point) {
     return (point[0] > this.pos[0] && point[0] < this.pos[0] + this.size[0]
         && point[1] > this.pos[1] && point[1] < this.pos[1] + this.size[1]);
 };
+
+/*
+ * Method: integerID
+ * Returns the group's ID as an integer
+ *
+ * Returns:
+ * The group's ID as an integer
+ *
+ * Member Of: Group
+ */
+Group.prototype.integerID = 
 
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Doc Ready Event Handler ///////////////////////////
