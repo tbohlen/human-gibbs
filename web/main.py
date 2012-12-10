@@ -1,7 +1,7 @@
 """
 Flask server
 """
-from flask import Flask, render_template, request, make_response
+from flask import Flask, render_template, request, make_response, send_file
 import db
 import json
 
@@ -39,23 +39,28 @@ def move():
     except KeyError:
         return "Must have value for move key in form data!"
 
-@app.route("/data/trials", methods='GET')
-def trials():
-    return "Conversion from Mongo to JSON not implemented yet!"
+@app.route("/images")
+def images():
+    # get trial id
+    trial_id = request.cookies.get('trial_id')
+    
+    # get a list of image names
+    image_names = db.image_names(db.get_image_set(trial_id))
 
-@app.route("/data/trials/<int:trial_id>/moves", methods=['POST','GET'])
-def moves(trial_id):
-    if request.method == 'POST':
-        try:
-            move = json.loads(request.form['move'])
-            if not has_move_fields(move):
-                return "Move missing some of the required fields. Check the README to see which"
-            db.add_move(trial_id, request.form['move'])
-        except KeyError:
-            return "Must have value for move key in form data!"
-            
-    else:
-        return "Conversion from Mongo to JSON not implemented yet!"
+    image_urls = ['/images/' + name for name in image_names]
 
+    return json.dumps(image_urls)
+
+@app.route("/images/<int:image_num>")
+def image(image_num):
+    # get trial id
+    trial_id = request.cookies.get('trial_id')
+
+    # get the image
+    image = db.get_image_file(trial_id, image_num)
+
+    return send_file(image, mimetype=image.content_type)
+
+    
 if __name__ == "__main__":
     app.run()

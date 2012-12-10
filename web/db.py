@@ -46,6 +46,32 @@ def add_image_set(dir_path):
     return db.images.insert({'name': name,
                              'images': image_list})
 
+# takes the trial_id as a string and returns the image set        
+def get_image_set(trial_id):
+    trial = db.trials.find_one({'_id': ObjectId(trial_id)})
+    return db.dereference(trial['image_set'])
+
+# gets a list of all names in the image set
+def image_names(image_set):
+    # write image set to the directory
+    image_names = []
+    i = 0 # index for filenames
+    for image_map in image_set['images']:
+        # find the image
+        image = fs.get(image_map['image_id'])
+
+        # choose the filename
+        ext = guess_extension(image.content_type)
+        name = str(i) + ext
+
+        # add the filename to the list
+        image_names.append(name)
+
+        # inc i
+        i += 1
+
+    return image_names
+
 # writes all the images in an image set to a desired folder location
 def write_image_set(image_set_name, target_dir):
     # make sure directory exists
@@ -55,29 +81,14 @@ def write_image_set(image_set_name, target_dir):
     # find image set
     image_set = db.images.find_one({'name': image_set_name})
 
-    # write image set to the directory
-    i = 0 # index for filenames
-    for image_map in image_set['images']:
-        # find the image
-        image = fs.get(image_map['image_id'])
+    # get a list of filenames
+    filenames = [join(target_dir, x) for x in image_names(image_set)]
 
-        # choose the filename
-        ext = guess_extension(image.content_type)
-        name = join(target_dir, str(i) + ext)
-
-        # write the image file
-        with open(name, 'wb') as f:
+    for i in range(len(filenames)):
+        image = fs.get(image_set['images'][i]['image_id'])
+        
+        with open(filenames[i], 'wb') as f:
             f.write(image.read())
-        i += 1
-
-def image_list(trial_id):
-    # find the trial
-    trial = db.trials.find_one({'_id': ObjectId(trial_id)})
-
-    # get the image set
-    image_set = db.dereference(trial['image_set'])
-
-    
     
 # add a trial to the system, returns string of the ID for the trial. 
 def add_trial(init_state, image_set_name):
@@ -86,6 +97,12 @@ def add_trial(init_state, image_set_name):
                                  'moves': [],
                                  'image_set': DBRef('images', image_set['_id'])})
     return str(trial_id)
+
+def get_image_file(trial_id, image_number):
+    # get the image
+    image_set = get_image_set(trial_id)
+    image_id = image_set['images'][image_number]['image_id']
+    return fs.get(image_id)
 
 # adds a trial based off an image set. All images are assumed to not start on
 # the board, i.e., all images are unstages
