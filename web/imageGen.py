@@ -1,8 +1,8 @@
-from math import floor
+from math import floor, ceil
 from numpy import random
 from PIL import Image
 from os import listdir
-from os.path import join, basename
+from os.path import join, basename, normpath, normpath
 import db
 
 """
@@ -29,7 +29,7 @@ def generateMatrix(baseMatrix, randomization):
 
 """
 Function: loadImage
-loads an image from the path provided
+loads an image from the path provided. Downsamples by a factor of 9 to make images large enough to be viewed by humans. Any 3x3 square containing more dark than light is black, and vise versa.
 
 Parameters:
 path - the path to the image to be loaded
@@ -39,12 +39,13 @@ def loadImage(path):
     pixelObj = baseImage.load()
     size = baseImage.size
     matrix = []
-    # for each pixel, check if it is black or white, and save 0 or 1 to the matrix
-    for i in range(size[0]):
+    # for each pixel, check if it is black or white, and save 0 or 1 to the matrix in the appropriate place
+    for i in range(int(ceil(size[0]/3))):
         newColumn = []
-        for j in range(size[1]):
-            pixel = pixelObj[i, j]
-            if pixel == 0 or (not pixel[0] and not pixel[1] and not pixel[2]):
+        for j in range(int(ceil(size[1]/3))):
+            values = [sum(pixelObj[m, n]) for m in range(3*i, 3*(i+1)) for n in range(3*j, 3*(j+1)) if m < size[0] and n < size[1]]
+            total = sum(values)
+            if total < 3443: # ceil(255 * 3 * 9 / 2)
                 # the pixel is black
                 newColumn.append(0)
             else:
@@ -55,7 +56,7 @@ def loadImage(path):
 
 """
 Function: saveMatrixAsImage
-Saves a black and white image file generated from the provided matrix at the specified path
+Saves a black and white image file generated from the provided matrix at the specified path. Updamples the image by a factor of 9 (9 pixels per matrix entry)
 
 Parameters:
 matrix - the matrix of values (1s and 0s) to be converted to an image
@@ -63,13 +64,19 @@ path - the path at which to save the image
 """
 def saveMatrixAsImage(matrix, path):
     size = (len(matrix), len(matrix[0]))
-    newImage = Image.new("RGB", size)
+    imageSize = (len(matrix)*3, len(matrix[0])*3)
+    newImage = Image.new("RGB", imageSize)
     for i in range(size[0]):
         for j in range(size[1]):
-            if matrix[i][j]:
-                newImage.putpixel( (i, j), (255, 255, 255))
-            else:
-                newImage.putpixel( (i, j), (0, 0, 0))
+            # for each entry in the matrix
+            for m in range(3*i, 3*(i+1)):
+                for n in range(3*j, 3*(j+1)):
+                    # for each f the 9 pixels corresponding to that entry, save black or white
+                    if matrix[i][j]:
+                        newImage.putpixel( (m, n), (255, 255, 255))
+                    else:
+                        newImage.putpixel( (m, n), (0, 0, 0))
+
     newImage.save(path, 'PNG')
 
 
@@ -86,6 +93,7 @@ numPerImage - the number of random images to produce for each base image. If lef
 """
 def generateRandomSets(baseFolder, resultFolder, randomization, numTotal, numPerImage=None):
     # get the base image files that we will be using to generate the image set
+    normpath(baseFolder) # i think this should take care of trailing separators for the name gen below
     baseImages = [join(baseFolder, f) for f in listdir(baseFolder)]
     baseImages = filter(db.is_image, baseImages)
 
@@ -107,18 +115,18 @@ def generateRandomSets(baseFolder, resultFolder, randomization, numTotal, numPer
             results.append({'path': path, 'parent': baseImages[i], 'category': i})
 
     # now that everything is saved in the filesystem, load it to the db
-    #saved = False
-    #base = basename(baseFolder)
-    #name = base
-    #number = 0
-    #while not saved:
-        #try:
-            #saved = True
-            #db.add_image_set(results, baseImages, name)
-        #except ValueError:
-            #number += 1
-            #name = base + str(number)
-            #saved = False
-        #except TypeError:
-            #saved = False
-            #raise
+    saved = False
+    base = basename(baseFolder)
+    name = base
+    number = 0
+    while not saved:
+        try:
+            saved = True
+            db.add_image_set_by_array(results, baseImages, name)
+        except ValueError:
+            name = base + str(number)
+            number += 1
+            saved = False
+        except TypeError:
+            saved = False
+            raise

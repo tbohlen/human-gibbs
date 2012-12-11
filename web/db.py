@@ -31,7 +31,7 @@ def add_image_set_by_array(images, parents, name):
 
     # put all the parent images into gridFS, save their object IDs
     parent_list = []
-    for image in parent:
+    for image in parents:
         with open(image, 'rb') as f:
             data = f.read()
             content_type = guess_type(image)[0]
@@ -44,14 +44,14 @@ def add_image_set_by_array(images, parents, name):
     # put all the images into gridFS, save their object IDs
     image_list = []
     for image in images:
-        with open(image.path, 'rb') as f:
+        with open(image['path'], 'rb') as f:
             data = f.read()
-            content_type = guess_type(image.path)[0]
+            content_type = guess_type(image['path'])[0]
             if content_type == None:
                 raise TypeError(('Couldn\'t guess the file extension for %s. ' +
-                                 'Check the filename.') % image.path)
+                                 'Check the filename.') % image['path'])
             image_id = fs.put(data, content_type=content_type)
-            image_list.append({'image_id': image_id, 'parent' : parent_list[image.category], 'category': image.category})
+            image_list.append({'image_id': image_id, 'parent': parent_list[image['category']], 'category': image['category']})
 
     # save the image set, return the 
     return db.images.insert({'name': name,
