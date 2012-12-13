@@ -53,7 +53,7 @@ body {
     -webkit-border-radius: 0px 0px 10px 10px; 
     border-radius: 0px 0px 10px 10px;
     width: 122px;
-    height: 134px;
+    height: 184px;
     padding-top: 6px;
 
     text-align: center;
@@ -125,6 +125,7 @@ body {
     height: 16px;
     font-size: 16px;
     line-height: 16px;
+    text-align: center;
 }
 
 /*
@@ -142,10 +143,10 @@ body {
 #addGroup {
     display:block;
     position: absolute;
-    right: 32px;
-    top: 10px;
+    bottom: 20px;
     height: 26px;
-    width: 150px;
+    width: 100px;
+    left: 11px;
     text-align: center;
     cursor: pointer;
     border: 1px solid #9999A0;
@@ -192,12 +193,16 @@ body {
     bottom: 0px;
     right: 0px;
     font-size: 20px;
-    color: #AA9999;
+    color: #AAAAAA;
     border: 1px solid #AA9999;
     background-color: #555555;
+    cursor: pointer;
+    width: 50px;
+    text-align: center;
 }
 #warnButton:hover {
     background-color: #888888;
+    color: #DDDDDD;
 }
 
 .unselectable {

@@ -1,6 +1,7 @@
 var IMAGES = "http://placekitten.com/g/100/100"
 var IMAGE_SIZE = 102;
 var GROUP_MARGIN = 32;
+var EXTRA_MARGIN = 16;
 var GROUP_ROW = 4;
 var GROUP_COL = 2;
 
@@ -139,7 +140,7 @@ function loadImages() {
  */
 function loadGroups() {
     var id = "GROUP0";
-    var newGroup = new Group([GROUP_MARGIN/2, GROUP_MARGIN/2], gibbs.groupSize, id);
+    var newGroup = new Group([GROUP_MARGIN/2, EXTRA_MARGIN + GROUP_MARGIN/2], gibbs.groupSize, id);
     newGroup.addToScreen();
     gibbs.groups.push(newGroup);
     gibbs.objects[id] = newGroup;
@@ -189,7 +190,7 @@ function sizeDocument() {
     gibbs.gameHeight = gibbs.game.height();
     gibbs.gameWidth = gibbs.game.width();
 
-    gibbs.groupSize = [(gibbs.gameWidth/4) - GROUP_MARGIN, (gibbs.gameHeight/2) - GROUP_MARGIN];
+    gibbs.groupSize = [(gibbs.gameWidth/4) - GROUP_MARGIN, ((gibbs.gameHeight - EXTRA_MARGIN)/2) - GROUP_MARGIN];
 
     scale = [gibbs.groupSize[0]/oldGroupSize[0],
                 gibbs.groupSize[1]/oldGroupSize[1]];
@@ -198,7 +199,7 @@ function sizeDocument() {
         var xNum = i%4;
         var yNum = Math.floor(i/4);
         var group = gibbs.groups[i];
-        group.moveTo([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)]);
+        group.moveTo([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), EXTRA_MARGIN + GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)]);
         group.resize(gibbs.groupSize);
     }
 
@@ -208,7 +209,7 @@ function sizeDocument() {
         var group = objectForID(image.group);
         var gridPos = group.getGridPos();
         var newPos = [0, 0];
-        var unscaled = [(gridPos[0] + 0.5) * GROUP_MARGIN, (gridPos[1] + 0.5) * GROUP_MARGIN];
+        var unscaled = [(gridPos[0] + 0.5) * GROUP_MARGIN, (gridPos[1] + 0.5) * GROUP_MARGIN + EXTRA_MARGIN];
 
         // only the space within groups gets scaled. Margins do not
         newPos[0] = ( (image.pos[0] - unscaled[0]) * scale[0] ) + unscaled[0];
@@ -609,7 +610,7 @@ $(document).ready(function() {
             var newGroup = new Group([0, 0], gibbs.groupSize, id);
             var gridPos = newGroup.getGridPos();
             newGroup.moveTo([GROUP_MARGIN/2 + gridPos[0]*(GROUP_MARGIN + gibbs.groupSize[0]),
-                            GROUP_MARGIN/2 + gridPos[1]*(GROUP_MARGIN + gibbs.groupSize[1])]);
+                            GROUP_MARGIN/2 + EXTRA_MARGIN + gridPos[1]*(GROUP_MARGIN + gibbs.groupSize[1])]);
             newGroup.addToScreen();
             gibbs.groups.push(newGroup);
             gibbs.objects[id] = newGroup;
