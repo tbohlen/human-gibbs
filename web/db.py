@@ -139,11 +139,9 @@ def add_trial(init_state, image_set):
                                  'image_set': DBRef('images', image_set['_id'])})
     return str(trial_id)
 
-def get_image_file(trial_id, image_number):
+def get_image_file(image_id):
     # get the image
-    image_set = get_image_set(trial_id)
-    image_id = image_set['images'][image_number]['image_id']
-    return fs.get(image_id)
+    return fs.get(ObjectId(image_id))
 
 # adds a trial based off a random image set from the database. All images are
 # assumed to not start on the board, i.e., all images are unstaged

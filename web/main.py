@@ -50,20 +50,17 @@ def images():
     # get trial id
     trial_id = request.cookies.get('trial_id')
     
-    # get a list of image names
-    image_names = db.image_names(db.get_image_set(trial_id))
+    # get the trials image set
+    image_set = db.get_image_set(trial_id)
 
-    image_urls = ['/images/' + str(i) for i in range(len(image_names))]
+    image_ids = [str(image['image_id']) for image in image_set['images']]
 
-    return json.dumps(image_urls)
+    return json.dumps(image_ids)
 
-@app.route("/images/<int:image_num>")
-def image(image_num):
-    # get trial id
-    trial_id = request.cookies.get('trial_id')
-
+@app.route("/images/<image_id>")
+def image(image_id):
     # get the image
-    image = db.get_image_file(trial_id, image_num)
+    image = db.get_image_file(image_id)
 
     return send_file(image, mimetype=image.content_type, cache_timeout=0)
 
