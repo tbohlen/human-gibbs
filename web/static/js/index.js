@@ -62,6 +62,10 @@ function clamp(low, high, val) {
  * Returns the object, whether group of image, for the given ID.
  */
 function objectForID(gibbsID) {
+    if (gibbsID == "GROUP-1") {
+        return gibbs.dummyGroup;
+    }
+
     return gibbs.objects[gibbsID];
 }
 
@@ -137,11 +141,14 @@ function loadImages() {
  * Creates the first group on screen
  */
 function loadGroups() {
-    var id = "g0";
+    var id = "GROUP0";
     var newGroup = new Group([GROUP_MARGIN/2, GROUP_MARGIN/2], gibbs.groupSize, id);
     newGroup.addToScreen();
     gibbs.groups.push(newGroup);
     gibbs.objects[id] = newGroup;
+
+    // dummy -1 group
+    gibbs.dummyGroup = new Group([0, 0], [1, 1], "GROUP-1");
 }
 
 /*
@@ -180,14 +187,15 @@ function sizeDocument() {
     var pageHeight = document.height;
     var pageWidth = document.width;
     var i;
-    //gibbs.game.width(pageWidth - (MARGIN * 2))
-        //.height(pageHeight - TOP_MARGIN - BOTTOM_MARGIN);
-    gameHeight = gibbs.game.height();
-    gameWidth = gibbs.game.width();
-    gibbs.gameHeight = gameHeight;
-    gibbs.gameWidth = gameWidth;
+    var oldGroupSize = (gibbs.groupSize) ? gibbs.groupSize : [0, 0];
+    var scale;
+    gibbs.gameHeight = gibbs.game.height();
+    gibbs.gameWidth = gibbs.game.width();
 
-    gibbs.groupSize = [(gameWidth/4) - GROUP_MARGIN, (gameHeight/2) - GROUP_MARGIN];
+    gibbs.groupSize = [(gibbs.gameWidth/4) - GROUP_MARGIN, (gibbs.gameHeight/2) - GROUP_MARGIN];
+
+    scale = [gibbs.groupSize[0]/oldGroupSize[0],
+                gibbs.groupSize[1]/oldGroupSize[1]];
 
     for (i = 0; i < gibbs.groups.length; i++) {
         var xNum = i%4;
@@ -196,8 +204,58 @@ function sizeDocument() {
         group.moveTo([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)]);
         group.resize(gibbs.groupSize);
     }
+
+    // move each of the images that are on the board
+    for (i = 0; i < gibbs.nextImage - 1; i++) {
+        var image = gibbs.images[i];
+        var group = objectForID(image.group);
+        var gridPos = group.getGridPos();
+        var newPos = [0, 0];
+        var unscaled = [(gridPos[0] + 0.5) * GROUP_MARGIN, (gridPos[1] + 0.5) * GROUP_MARGIN];
+
+        // only the space within groups gets scaled. Margins do not
+        newPos[0] = ( (image.pos[0] - unscaled[0]) * scale[0] ) + unscaled[0];
+        newPos[1] = ( (image.pos[1] - unscaled[1]) * scale[1] ) + unscaled[1];
+        image.moveTo(newPos);
+    }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/////////////////////////// Server Communication //////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Function: sendMoveData
+ * Sends information about the move of image to group to the server.
+ *
+ * Parameters:
+ * image - the image that was moved
+ * groupID - the id of the group it ended up in
+ */
+function sendMoveData(image, groupID) {
+    var moveData = {
+        image_id: image.id,
+        old_group: objectForID(image.group).getIndex(),
+        new_group: objectForID(groupID).getIndex(),
+        old_x: image.lastSolidPos[0],
+        new_x: image.pos[0],
+        old_y: image.lastSolidPos[1],
+        new_y: image.pos[1],
+        time_elapsed: 0
+    };
+
+    // post the move data in a form to the database
+    var moveForm = new FormData();
+    moveForm.append('move', JSON.stringify(moveData));
+
+    $.ajax({
+        url: "/move",
+        data: moveForm,
+        processData: false,
+        contentType: false,
+        type: 'POST'
+    });
+}
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////// Image Object ////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -213,7 +271,7 @@ function Image(url, container, id) {
     var y = -1;
     this.pos = [x, y];
     this.unstaged = false;
-    this.group = 'g-1';
+    this.group = 'GROUP-1';
 
     // is the last known "ok" position of the object
     // generally this means it
@@ -333,28 +391,7 @@ Image.prototype.endDrag = function(ev, pos) {
         this.moveTo(this.perfectPos);
 
         // record the data from the move
-        var moveData = {
-            image_id: this.id,
-            old_group: parseInt(this.group.substr(1)),
-            new_group: parseInt(groupID.substr(1)),
-            old_x: this.lastSolidPos[0],
-            new_x: this.pos[0],
-            old_y: this.lastSolidPos[1],
-            new_y: this.pos[1],
-            time_elapsed: 0
-        };
-
-        // post the move data in a form to the database
-        var moveForm = new FormData();
-        moveForm.append('move', JSON.stringify(moveData));
-        
-        $.ajax({
-          url: "/move",
-          data: moveForm,
-          processData: false,
-          contentType: false,
-          type: 'POST'
-        });
+        sendMoveData(this, groupID);
 
         // update variables that store previous state
         this.lastSolidPos = [this.pos[0], this.pos[1]];
@@ -467,8 +504,30 @@ Group.prototype.resize = function(newSize) {
     // TODO: if implementing manual resizing of groups include perfectSize and
     // clamping as in move and moveTo
 
+    this.size = [newSize[0], newSize[1]];
     this.object.css('width', newSize[0]);
-    this.object.css('height', newSize[1])
+    this.object.css('height', newSize[1]);
+};
+
+/*
+ * Method: getIndex
+ * Returns the index of this group, a helpful identifier for the server.
+ *
+ * Member Of: Group
+ */
+Group.prototype.getIndex = function() {
+    return parseInt(this.id.substr(5), 10);
+};
+
+/*
+ * Method: getGridPos
+ * Returns the position of this group in the grid of groups.
+ *
+ * Member Of: Group
+ */
+Group.prototype.getGridPos = function() {
+    var index = this.getIndex();
+    return [index%4, Math.floor(index/4)];
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -533,10 +592,11 @@ $(document).ready(function() {
     $('#addGroup').on('click', function(ev) {
         var groupNum = gibbs.groups.length.toString();
         if (groupNum < GROUP_ROW * GROUP_COL) {
-            var xNum = groupNum%4;
-            var yNum = Math.floor(groupNum/4);
-            var id = "GROUP" + groupNum
-            var newGroup = new Group([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)], gibbs.groupSize, id);
+            var id = "GROUP" + groupNum;
+            var newGroup = new Group([0, 0], gibbs.groupSize, id);
+            var gridPos = newGroup.getGridPos();
+            newGroup.moveTo([GROUP_MARGIN/2 + gridPos[0]*(GROUP_MARGIN + gibbs.groupSize[0]),
+                            GROUP_MARGIN/2 + gridPos[1]*(GROUP_MARGIN + gibbs.groupSize[1])]);
             newGroup.addToScreen();
             gibbs.groups.push(newGroup);
             gibbs.objects[id] = newGroup;
