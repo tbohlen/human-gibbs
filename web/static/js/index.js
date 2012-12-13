@@ -334,7 +334,7 @@ Image.prototype.endDrag = function(ev, pos) {
 
         // record the data from the move
         var moveData = {
-            id: parseInt(this.id),
+            image_id: this.id,
             old_group: parseInt(this.group.substr(1)),
             new_group: parseInt(groupID.substr(1)),
             old_x: this.lastSolidPos[0],
