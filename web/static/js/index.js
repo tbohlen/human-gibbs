@@ -14,6 +14,7 @@ gibbs.lastMousePos = [0, 0];
 gibbs.nextImage = 0;
 gibbs.groups = [];
 gibbs.images = [];
+gibbs.objects = {};
 
 /*
  * Function: cancel
@@ -61,15 +62,7 @@ function clamp(low, high, val) {
  * Returns the object, whether group of image, for the given ID.
  */
 function objectForID(gibbsID) {
-    var regex = /^g.+/;
-    if (regex.exec(gibbsID)) {
-        var index = parseInt(gibbsID.substr(1), 10);
-        return gibbs.groups[index];
-    }
-    else {
-        var index = parseInt(gibbsID, 10);
-        return gibbs.images[index];
-    }
+    return gibbs.objects[index];
 }
 
 /*
@@ -102,6 +95,21 @@ function getGroup(pos) {
 }
 
 /*
+ * Function: randomizeList
+ * Uses Knuth's algorithm to randomize a list
+ */
+function randomizeList(l) {
+    var i;
+    for (i = l.length-1; i > 0; i--) {
+        randInd = Math.floor(Math.random() * i);
+        switchElem = l[randInd];
+        otherElem = l[i];
+        l[randInd] = otherElem;
+        l[i] = switchElem;
+    }
+}
+
+/*
  * Function: loadImages
  * loads all images from server (or, as of now, from a given URL) and saves them
  * in the gibbs.images array
@@ -110,11 +118,15 @@ function loadImages() {
     $.ajax({
         url: "/images",
         success: function(data) {
-            var imageURLs = JSON.parse(data);
-            for (i = 0; i < imageURLs.length; i++) {
-                var newImage = new Image(imageURLs[i], gibbs.game, i.toString());
+            var imageIDs = JSON.parse(data);
+            for (i = 0; i < imageIDs.length; i++) {
+                var id = imageIDs[i];
+                var newImage = new Image("/images/" + id, gibbs.game, id);
+                gibbs.objects[id] = newImage;
                 gibbs.images.push(newImage);
             }
+            // randomize
+            randomizeList(gibbs.images);
         },
         async: false
     });
@@ -125,9 +137,11 @@ function loadImages() {
  * Creates the first group on screen
  */
 function loadGroups() {
-    var newGroup = new Group([GROUP_MARGIN/2, GROUP_MARGIN/2], gibbs.groupSize, "g0");
+    var id = "g0";
+    var newGroup = new Group([GROUP_MARGIN/2, GROUP_MARGIN/2], gibbs.groupSize, id);
     newGroup.addToScreen();
     gibbs.groups.push(newGroup);
+    gibbs.objects[id] = newGroup;
 }
 
 /*
@@ -521,9 +535,11 @@ $(document).ready(function() {
         if (groupNum < GROUP_ROW * GROUP_COL) {
             var xNum = groupNum%4;
             var yNum = Math.floor(groupNum/4);
-            var newGroup = new Group([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)], gibbs.groupSize, "g" + groupNum);
+            var id = "GROUP" + groupNum
+            var newGroup = new Group([GROUP_MARGIN/2 + xNum*(GROUP_MARGIN + gibbs.groupSize[0]), GROUP_MARGIN/2 + yNum*(gibbs.groupSize[1] + GROUP_MARGIN)], gibbs.groupSize, id);
             newGroup.addToScreen();
             gibbs.groups.push(newGroup);
+            gibbs.objects[id] = newGroup;
         }
         else {
             warn('You cannot add any more groups');
