@@ -23,13 +23,13 @@ collection stores holds the images used.
 #### State 
 
 The state is defined by a list of all the objects on the board. Each object has
-the fields `'id'`, `'group'`, `'x'`, `'y'`. The `'id'` field is unique within
-the trial and is linked with the image representing the object. The `'group'`
+the fields `'image_id'`, `'group'`, `'x'`, `'y'`. The `'image_id'` is the
+image_id in the gridFS system for the image corresponding to the object. The `'group'`
 field is `-1` if it is unassigned. `x` and `y` are `-1` if the image is not
 on the board yet. A sample object is shown below:
 
 ```python
-{'id': 34,
+{'image_id': 34,
  'group': 3,
  'x': 25,
  'y': 193}
@@ -38,16 +38,14 @@ on the board yet. A sample object is shown below:
 Only the initial state is stored in the trial's Mongo document, but the state at
 any point can be reconstructed by the list of moves.
 
-#### Moves
-A move is defined the fields `'id'`, `'old_group'`, `'new_group'`, `'old_x'`,
-`'new_x'`, `'old_y'`, `'new_y'`, `'time_elapsed'`.  The `'id'` field refers to
-the object that was moved, the "old" keys refer to the state of the object
-before the move, the "new" keys refer to the state of the objects after the
-move, and `'time_elapsed'` refers to the time that the user took to make the
-move. 
+#### Moves A move is defined the fields `'image_id'`, `'old_group'`,
+`'new_group'`, `'old_x'`, `'new_x'`, `'old_y'`, `'new_y'`, `'time_elapsed'`. The
+`'image_id'` field is for the image of the object that was moved, the "old" keys
+refer to the state of the object before the move, the "new" keys refer to the
+state of the objects after the move, and `'time_elapsed'` refers to the time
+that the user took to make the move.
 
 ### Image Sets
-
 Each document in the images collection is simply composed of a `'name'` field
 and an `'images'` field. The `'images'` field is a list of image dicts.  Each
 will have at least the key `'image_id'` corresponding to its ObjectIds in

@@ -37,13 +37,15 @@ def move():
 
         # make sure the move has all the necessary fields
         if not db.has_move_fields(move):
-            return "Move missing some of the required fields. Check the README to see which"
+            return "Move missing some of the required fields. Check the README to see which", 500
 
         # add the move data to the database
-        db.add_move(trial_id, move)
-        return "Success!"
+        try:
+            return str(db.add_move(trial_id, move))
+        except e:
+            return str(e), 500
     except KeyError:
-        return "Must have value for move key in form data!"
+        return "Must have value for move key in form data!", 500
 
 @app.route("/images")
 def images():

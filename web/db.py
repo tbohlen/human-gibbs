@@ -154,10 +154,9 @@ def add_unstaged_trial():
     image_set = image_sets[randint(num_sets)]
     
     # add all the images to the trial
-    num_images = len(image_set['images'])
     init_state = []
-    for i in range(num_images):
-        init_state.append({'id': i,
+    for image in image_set['images']:
+        init_state.append({'image_id': image['image_id'],
                            'group': -1,
                            'x': -1,
                            'y': -1})
@@ -171,7 +170,7 @@ def add_move(trial_id, move):
 
 # checks a dict representing a move to make sure it has all the required fields
 def has_move_fields(move):
-    move_fields = ['id', 'old_group', 'new_group', 'old_x', 'new_x',
+    move_fields = ['image_id', 'old_group', 'new_group', 'old_x', 'new_x',
                    'old_y', 'new_y', 'time_elapsed']
 
     # make sure each field is in the dict
