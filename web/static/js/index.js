@@ -166,8 +166,8 @@ function sizeDocument() {
     var pageHeight = document.height;
     var pageWidth = document.width;
     var i;
-    gibbs.game.width(pageWidth - (MARGIN * 2))
-        .height(pageHeight - TOP_MARGIN - BOTTOM_MARGIN);
+    //gibbs.game.width(pageWidth - (MARGIN * 2))
+        //.height(pageHeight - TOP_MARGIN - BOTTOM_MARGIN);
     gameHeight = gibbs.game.height();
     gameWidth = gibbs.game.width();
     gibbs.gameHeight = gameHeight;
