@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 """
 Flask server
 """
@@ -8,8 +10,12 @@ import json
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
+# if in DEBUG mode, set static resources to expire immediately
+if app.config['DEBUG']:
+    app.get_send_file_max_age = lambda x: 0
+
 @app.route("/")
-def hello():
+def start():
     # generate the HTML for the trial
     resp = make_response(render_template("index.html", hello=True))
 

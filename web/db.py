@@ -5,6 +5,7 @@ from gridfs import GridFS
 from os import listdir, makedirs
 from os.path import isfile, join, splitext, basename, exists
 from mimetypes import guess_type, guess_extension
+from numpy.random import randint
 
 # connect to the mongo cdatabase and gridFS
 connection = MongoClient()
@@ -144,10 +145,17 @@ def get_image_file(trial_id, image_number):
     image_id = image_set['images'][image_number]['image_id']
     return fs.get(image_id)
 
-# adds a trial based off an image set. All images are assumed to not start on
-# the board, i.e., all images are unstaged
+# adds a trial based off a random image set from the database. All images are
+# assumed to not start on the board, i.e., all images are unstaged
 def add_unstaged_trial():
-    image_set = db.images.find_one()    
+    # get a cursor over the image sets
+    image_sets = db.images.find()
+
+    # choose a random image set
+    num_sets = image_sets.count()
+    image_set = image_sets[randint(num_sets)]
+    
+    # add all the images to the trial
     num_images = len(image_set['images'])
     init_state = []
     for i in range(num_images):
