@@ -1,9 +1,6 @@
-var MARGIN = 125;
-var TOP_MARGIN = 50;
-var BOTTOM_MARGIN = 50;
 var IMAGES = "http://placekitten.com/g/100/100"
 var IMAGE_SIZE = 102;
-var GROUP_MARGIN = 10;
+var GROUP_MARGIN = 32;
 var GROUP_ROW = 4;
 var GROUP_COL = 2;
 
@@ -216,7 +213,7 @@ function sizeDocument() {
         // only the space within groups gets scaled. Margins do not
         newPos[0] = ( (image.pos[0] - unscaled[0]) * scale[0] ) + unscaled[0];
         newPos[1] = ( (image.pos[1] - unscaled[1]) * scale[1] ) + unscaled[1];
-        image.moveTo(newPos);
+        image.moveTo(newPos, true);
     }
 }
 
@@ -331,14 +328,25 @@ Image.prototype.move = function(delta) {
  *
  * Parameters:
  * newPos - the new game position of the image as an array of x, y
+ * groupLimit - true if the move should be limitted to within the current group
  *
  * Member Of: Image
  */
-Image.prototype.moveTo = function(newPos) {
+Image.prototype.moveTo = function(newPos, groupLimit) {
     this.perfectPos = [newPos[0], newPos[1]];
+    var xClamp, yClamp;
+    if (groupLimit) {
+        var groupObj = objectForID(this.group);
+        xClamp = [groupObj.pos[0], groupObj.pos[0] + groupObj.size[0] - IMAGE_SIZE];
+        yClamp = [groupObj.pos[1], groupObj.pos[1] + groupObj.size[1] - IMAGE_SIZE];
+    }
+    else {
+        xClamp = [0, gibbs.game.innerWidth() - IMAGE_SIZE - 1];
+        yClamp = [0, gibbs.game.innerHeight() - IMAGE_SIZE - 1];
+    }
     if (this.unstaged) {
-        this.pos[0] = clamp(0, gibbs.game.innerWidth() - IMAGE_SIZE - 1, this.perfectPos[0]);
-        this.pos[1] = clamp(0, gibbs.game.innerHeight() - IMAGE_SIZE - 1, this.perfectPos[1]);
+        this.pos[0] = clamp(xClamp[0], xClamp[1], this.perfectPos[0]);
+        this.pos[1] = clamp(yClamp[0], yClamp[1], this.perfectPos[1]);
     }
     else {
         this.pos[0] = this.perfectPos[0];
@@ -436,13 +444,18 @@ function Group(startPos, startSize, id) {
     this.perfectPos = startPos;
 
     this.object = $(document.createElement('div'));
-    this.object.addClass('group')
+    this.object.addClass('group');
     this.object.css('left', this.pos[0]);
     this.object.css('top', this.pos[1]);
     this.object.width(this.size[0]);
     this.object.height(this.size[1]);
     this.object.data('gibbsID', this.id);
     this.object.css('z-index', 1);
+
+    var label = $(document.createElement('span'));
+    label.addClass('groupLabel');
+    label.text("Group " + (this.getIndex() + 1));
+    this.object.append(label);
 }
 
 /*
