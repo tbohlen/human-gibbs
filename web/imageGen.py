@@ -1,5 +1,5 @@
-from math import floor, ceil
-from numpy import random
+from math import floor, ceil, exp, sqrt, pi
+from numpy import random, zeros
 from PIL import Image
 from os import listdir
 from os.path import join, basename, normpath, normpath
@@ -8,6 +8,8 @@ import db
 """
 Function: generateMatrix
 Generates a randomized matrix based on the input image.
+
+This samples from a gaussian for each pixel. The mean of the gaussian is the original pixel value, and the standard dev is randomization
 
 Parameters:
 baseMatrix - the matrix to randomize to produce the new matrix
@@ -19,13 +21,46 @@ def generateMatrix(baseMatrix, randomization):
         newRow = []
         for j in range(len(baseMatrix[0])):
             origVal = baseMatrix[i][j]
-            randVal = random.uniform(0.0, 1.0)
-            if randVal < randomization:
-                newRow.append(1 - origVal)
-            else:
-                newRow.append(origVal)
+            newRow.append(clamp(0, 255, random.normal(origVal, randomization)))
         newMatrix.append(newRow)
-    return newMatrix
+    return gaussianFilter(newMatrix)
+
+# bounds value so that it is not larger than high and no smaller than low
+def clamp(low, high, val):
+    if high < val:
+        return high
+    if low > val:
+        return low
+    return val
+
+# returns the value of the gaussian with the given mean and standard dev at the given point
+#def gaussianValue(mean, sd, x):
+    #exponent = -1 * pow( (x - mean), 2) / (2 * sd * sd)
+    #return exp(exponent) / (sqrt(2 * pi * sd * sd))
+
+def gaussianFilter(matrix):
+    # filters the images using a gaussian
+    size = (len(matrix), len(matrix[0]))
+    xFilterMatrix = zeros(size)
+    yFilterMatrix = zeros(size)
+    k = [0.1201, 0.2339, 0.2931, 0.2339, 0.1201];
+    for i in range(size[0]):
+        for j in range(size[1]):
+            total = 0
+            for m in range(5):
+                x = clamp(0, size[0]-1, i+m-2)
+                total += k[m] * matrix[x][j]
+            xFilterMatrix[i][j] = total
+
+    for i in range(size[0]):
+        for j in range(size[1]):
+            total = 0
+            for n in range(5):
+                y = clamp(0, size[0]-1, j+n-2)
+                total += k[n] * xFilterMatrix[i][y]
+            yFilterMatrix[i][j] = total
+    return yFilterMatrix
+
 
 """
 Function: loadImage
@@ -40,17 +75,11 @@ def loadImage(path):
     size = baseImage.size
     matrix = []
     # for each pixel, check if it is black or white, and save 0 or 1 to the matrix in the appropriate place
-    for i in range(int(ceil(size[0]/3))):
+    for i in range(size[0]):
         newColumn = []
-        for j in range(int(ceil(size[1]/3))):
-            values = [sum(pixelObj[m, n]) for m in range(3*i, 3*(i+1)) for n in range(3*j, 3*(j+1)) if m < size[0] and n < size[1]]
-            total = sum(values)
-            if total < 3443: # ceil(255 * 3 * 9 / 2)
-                # the pixel is black
-                newColumn.append(0)
-            else:
-                # the pixel is colored
-                newColumn.append(1)
+        for j in range(size[1]):
+            # converts to gray-scale, just in case
+            newColumn.append(sum(pixelObj[i, j])/3.0)
         matrix.append(newColumn)
     return matrix
 
@@ -64,18 +93,12 @@ path - the path at which to save the image
 """
 def saveMatrixAsImage(matrix, path):
     size = (len(matrix), len(matrix[0]))
-    imageSize = (len(matrix)*3, len(matrix[0])*3)
-    newImage = Image.new("RGB", imageSize)
+    newImage = Image.new("RGB", size)
     for i in range(size[0]):
         for j in range(size[1]):
             # for each entry in the matrix
-            for m in range(3*i, 3*(i+1)):
-                for n in range(3*j, 3*(j+1)):
-                    # for each f the 9 pixels corresponding to that entry, save black or white
-                    if matrix[i][j]:
-                        newImage.putpixel( (m, n), (255, 255, 255))
-                    else:
-                        newImage.putpixel( (m, n), (0, 0, 0))
+            val = int(matrix[i][j])
+            newImage.putpixel((i, j), (val, val, val))
 
     newImage.save(path, 'PNG')
 
