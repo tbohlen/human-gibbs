@@ -62,7 +62,7 @@ function clamp(low, high, val) {
  * Returns the object, whether group of image, for the given ID.
  */
 function objectForID(gibbsID) {
-    return gibbs.objects[index];
+    return gibbs.objects[gibbsID];
 }
 
 /*
