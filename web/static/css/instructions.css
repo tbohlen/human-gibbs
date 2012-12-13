@@ -1,0 +1,74 @@
+html {
+    font-family: helvetica;
+    font-size: 18px;
+    color: #222222;
+}
+body {
+    margin: 0px;
+    border: 0px;
+    padding: 0px;
+    background-color: #FFFFFF;
+}
+
+/*
+ * Class: container
+ * Description...
+ */
+.container {
+    position: absolute;
+    top: 0px;
+    left: 50px;
+    right: 50px;
+    bottom: 50px;
+    padding: 25px;
+    background-color: #EEEEEE;
+    border: 4px solid #555570;
+    border-top: 0px;
+    border--moz-border-radius: 0px 0px 20px 20px;
+    -webkit-border-radius: 0px 0px 20px 20px; 
+    border-radius: 0px 0px 20px 20px;
+}
+/*
+ * Class: instruction
+ * Instruction box
+ */
+.instruction {
+    margin: 25px
+}
+.instruction h1 {
+    font-size: 28px;
+}
+/*
+ * ID: play
+ * Button to start the game
+ */
+#play {
+    display: block;
+    margin: auto;
+    width: 200px;
+    height: 100px;
+    font-size: 60px;
+    border: 4px solid #555570;
+    border-top: 0px;
+    border--moz-border-radius: 20px 20px 20px 20px;
+    -webkit-border-radius: 20px 20px 20px 20px; 
+    border-radius: 20px 20px 20px 20px;
+    background-color: #4466BB;
+    text-align: center;
+    line-height: 100px;
+    overflow: auto;
+    color: #222222;
+    text-decoration: none;
+}
+#play:hover {
+    background-color: #88CCFF;
+}
+#play:active {
+    -moz-box-shadow: inset 2px 2px 2px 2px #000000 ;
+    -webkit-box-shadow: inset 2px 2px 2px 2px #000000;
+    box-shadow: inset 2px 2px 2px 2px #000000;
+    /* For IE 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=2, Direction=135, Color='#000000')";
+    /* For IE 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.Shadow(Strength=2, Direction=135, Color='#000000');
+}
