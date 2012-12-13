@@ -17,7 +17,13 @@ if app.config['DEBUG']:
 @app.route("/")
 def start():
     # generate the HTML for the trial
-    resp = make_response(render_template("index.html", hello=True))
+    resp = make_response(render_template("instructions.html"))
+    return resp
+
+@app.route("/sorter")
+def startSorter():
+    # generate the HTML for the trial
+    resp = make_response(render_template("index.html"))
 
     # create a new trail, get the id
     trial_id = db.add_unstaged_trial() # TODO: choose actual set somehow
