@@ -5,6 +5,9 @@ var EXTRA_MARGIN = 16;
 var GROUP_ROW = 4;
 var GROUP_COL = 2;
 
+// Trial constants
+var ONE_PLACEMENT_PER_IMAGE = true; // first image placement cannot be changed
+
 // create a place for us to store important variables on the doc
 var gibbs = {};
 gibbs.dragObj = null;
@@ -13,6 +16,7 @@ gibbs.nextImage = 0;
 gibbs.groups = [];
 gibbs.images = [];
 gibbs.objects = {};
+gibbs.trialFinished = false;
 
 /*
  * Function: cancel
@@ -162,12 +166,30 @@ function warn(text) {
 }
 
 /*
+  * Function: endTrial
+  * Provides end of trial messages, prevents further moving of the images
+  */
+function endTrial() {
+  gibbs.trialFinished = true;
+  $('#noMoreImages').show();
+  $.ajax({
+    url: '/trial-id',
+    success: function(data) {
+      var message = "For Mechanical Turkers, the trial code to enter is:\n\n"
+        + JSON.parse(data);
+      warn(message);
+    },
+    async: false
+  });
+}
+
+/*
  * Function: showImage
  * Shows the next image in the next image area.
  */
 function showImage() {
     if (gibbs.nextImage >= gibbs.images.length) {
-        $('#noMoreImages').show();
+      endTrial();
     }
     else {
         var image = gibbs.images[gibbs.nextImage];
@@ -231,6 +253,8 @@ function sizeDocument() {
  * groupID - the id of the group it ended up in
  */
 function sendMoveData(image, groupID) {
+    // calculate time elapsed since the image was shown
+    var time_elasped = (new Date()).getTime() - image.timeShown;
     var moveData = {
         image_id: image.id,
         old_group: objectForID(image.group).getIndex(),
@@ -239,7 +263,7 @@ function sendMoveData(image, groupID) {
         new_x: image.pos[0],
         old_y: image.lastSolidPos[1],
         new_y: image.pos[1],
-        time_elapsed: 0
+        time_elapsed: time_elasped
     };
 
     // post the move data in a form to the database
@@ -295,6 +319,7 @@ function Image(url, container, id) {
  * Member Of: Image
  */
 Image.prototype.addToScreen = function() {
+    this.timeShown = (new Date()).getTime();
     gibbs.game.append(this.object);
 };
 
@@ -373,6 +398,36 @@ Image.prototype.startDrag = function(ev, pos) {
 };
 
 /*
+ * Method: validDrag
+ * Predicate to check whether an image drag was valid
+ *
+ * Parameters:
+ * ev - the event that ended the drag
+ * pos - the game position of the mouse when the event fired
+ *
+ * Returns:
+ * True if was a valid drag, false otherwise
+ *
+ * Member Of: Image
+ */
+Image.prototype.validDrag = function(ev, pos) {
+  var valid = true;
+
+  // make sure trial isn't finished
+  valid = valid && !gibbs.trialFinished;
+
+  // if only one placement per image, make sure image hasn't been moved before
+  if (ONE_PLACEMENT_PER_IMAGE) {
+    valid = valid && !this.unstaged;
+  }
+
+  // make sure image is in a group location
+  valid = valid && (getGroup(pos) != -1)
+
+  return valid
+}
+
+/*
  * Method: endDrag
  * Handles the ending of a drag
  *
@@ -383,29 +438,31 @@ Image.prototype.startDrag = function(ev, pos) {
  * Member Of: Image
  */
 Image.prototype.endDrag = function(ev, pos) {
-    var groupID = getGroup(pos);
-    if (groupID == -1) {
-        this.cancelDrag(ev);
-    }
-    else {
-        // if not unstaged, mark as unstaged and stage next
-        if (!this.unstaged) {
-            this.unstaged = true;
-            showImage();
-        }
-        // modify the position so that it is inside the group
-        var group = objectForID(groupID);
-        this.perfectPos[0] = clamp(group.pos[0], group.pos[0] + group.size[0] - IMAGE_SIZE - 1, this.perfectPos[0]);
-        this.perfectPos[1] = clamp(group.pos[1], group.pos[1] + group.size[1] - IMAGE_SIZE - 1, this.perfectPos[1]);
-        this.moveTo(this.perfectPos);
+    // make sure the drag is valid
+    if (!this.validDrag(ev, pos)) {
+      this.cancelDrag(ev);
+    } else {
+      // check which group it is in
+      var groupID = getGroup(pos);
 
-        // record the data from the move
-        sendMoveData(this, groupID);
+      // if not unstaged, mark as unstaged and stage next
+      if (!this.unstaged) {
+        this.unstaged = true;
+        showImage();
+      }
+      // modify the position so that it is inside the group
+      var group = objectForID(groupID);
+      this.perfectPos[0] = clamp(group.pos[0], group.pos[0] + group.size[0] - IMAGE_SIZE - 1, this.perfectPos[0]);
+      this.perfectPos[1] = clamp(group.pos[1], group.pos[1] + group.size[1] - IMAGE_SIZE - 1, this.perfectPos[1]);
+      this.moveTo(this.perfectPos);
 
-        // update variables that store previous state
-        this.lastSolidPos = [this.pos[0], this.pos[1]];
-        this.group = groupID
-        this.object.removeClass('dragImage');
+      // record the data from the move
+      sendMoveData(this, groupID);
+
+      // update variables that store previous state
+      this.lastSolidPos = [this.pos[0], this.pos[1]];
+      this.group = groupID
+      this.object.removeClass('dragImage');
     }
 };
 

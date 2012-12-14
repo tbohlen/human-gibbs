@@ -100,7 +100,7 @@ def image(image_id):
 @app.route("/trial-id")
 def trial_id():
     # return the trial id
-    return request.cookies.get('trial_id')
+    return json.dumps(request.cookies.get('trial_id'))
 
 if __name__ == "__main__":
     app.run()
