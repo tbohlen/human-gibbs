@@ -1,5 +1,5 @@
 from math import floor, ceil, exp, sqrt, pi
-from numpy import random, zeros
+from numpy import random, zeros, convolve, transpose
 from PIL import Image
 from os import listdir
 from os.path import join, basename, normpath, normpath
@@ -15,7 +15,7 @@ Parameters:
 baseMatrix - the matrix to randomize to produce the new matrix
 randomization - the probability of flipping each bit
 """
-def generateMatrix(baseMatrix, randomization):
+def generateMatrix(baseMatrix, randomization, filterSize):
     newMatrix = []
     for i in range(len(baseMatrix)):
         newRow = []
@@ -23,7 +23,7 @@ def generateMatrix(baseMatrix, randomization):
             origVal = baseMatrix[i][j]
             newRow.append(clamp(0, 255, random.normal(origVal, randomization)))
         newMatrix.append(newRow)
-    return gaussianFilter(newMatrix)
+    return gaussianFilter(newMatrix, filterSize)
 
 # bounds value so that it is not larger than high and no smaller than low
 def clamp(low, high, val):
@@ -34,32 +34,32 @@ def clamp(low, high, val):
     return val
 
 # returns the value of the gaussian with the given mean and standard dev at the given point
-#def gaussianValue(mean, sd, x):
-    #exponent = -1 * pow( (x - mean), 2) / (2 * sd * sd)
-    #return exp(exponent) / (sqrt(2 * pi * sd * sd))
+def gaussianValue(mean, sd, x):
+    exponent = -1 * pow( (x - mean), 2) / (2 * sd * sd)
+    return exp(exponent) / (sqrt(2 * pi * sd * sd))
 
-def gaussianFilter(matrix):
+def discreteGaussian(num, mean=0.5, sd=0.2):
+    return [gaussianValue(mean, sd, float(x+1)/(num+1)) for x in range(int(num))]
+
+def gaussianFilter(matrix, filterSize):
     # filters the images using a gaussian
     size = (len(matrix), len(matrix[0]))
     xFilterMatrix = zeros(size)
     yFilterMatrix = zeros(size)
-    k = [0.1201, 0.2339, 0.2931, 0.2339, 0.1201];
-    for i in range(size[0]):
-        for j in range(size[1]):
-            total = 0
-            for m in range(5):
-                x = clamp(0, size[0]-1, i+m-2)
-                total += k[m] * matrix[x][j]
-            xFilterMatrix[i][j] = total
+    kernel = discreteGaussian(filterSize)
+    kernelSum = sum(kernel)
 
+    # blur columns
     for i in range(size[0]):
-        for j in range(size[1]):
-            total = 0
-            for n in range(5):
-                y = clamp(0, size[0]-1, j+n-2)
-                total += k[n] * xFilterMatrix[i][y]
-            yFilterMatrix[i][j] = total
-    return yFilterMatrix
+        xFilterMatrix[i] = [x/kernelSum for x in convolve(matrix[i], kernel, "same")]
+
+    xFilterMatrix = transpose(xFilterMatrix)
+
+    # blur rows
+    for j in range(size[0]):
+        yFilterMatrix[j] = [x/kernelSum for x in convolve(xFilterMatrix[j], kernel, "same")]
+
+    return transpose(yFilterMatrix)
 
 
 """
@@ -79,7 +79,11 @@ def loadImage(path):
         newColumn = []
         for j in range(size[1]):
             # converts to gray-scale, just in case
-            newColumn.append(sum(pixelObj[i, j])/3.0)
+            pixel = pixelObj[i, j]
+            if baseImage.mode == "1":
+                newColumn.append(pixel)
+            else:
+                newColumn.append(sum(pixelObj[i, j])/3.0)
         matrix.append(newColumn)
     return matrix
 
@@ -110,11 +114,11 @@ Generates a set of randomized images from the images in the provided baseFolder.
 Parameters:
 baseFolder - folder containing base images
 resultFolder - folder in which to store the resulting randomized images
-randomization - array of probabilities that dictate how much to distort each base image
+randomization - probability that dictate how much to distort each base image
 numTotal - the total number of new images to produce
 numPerImage - the number of random images to produce for each base image. If left out, will be generated
 """
-def generateRandomSets(baseFolder, resultFolder, randomization, numTotal, numPerImage=None):
+def generateRandomSets(baseFolder, resultFolder, randomization, numTotal, filterSize=10, numPerImage=None):
     # get the base image files that we will be using to generate the image set
     normpath(baseFolder) # i think this should take care of trailing separators for the name gen below
     baseImages = [join(baseFolder, f) for f in listdir(baseFolder)]
@@ -131,7 +135,7 @@ def generateRandomSets(baseFolder, resultFolder, randomization, numTotal, numPer
     for i in range(len(baseImages)):
         baseMatrix = loadImage(baseImages[i])
         for j in range(numPerImage[i]):
-            randomImage = generateMatrix(baseMatrix, randomization[i])
+            randomImage = generateMatrix(baseMatrix, randomization, filterSize)
             path = join(resultFolder, str(i) + "-" + str(j) + ".png")
             # save the image
             saveMatrixAsImage(randomImage, path)
