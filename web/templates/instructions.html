@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <html>
-<head>
+  <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
 
     <title>Instructions</title>
@@ -9,30 +9,35 @@
     <link rel="stylesheet" href="/static/css/instructions.css" type="text/css" media="screen" charset="utf-8"/>
     <script src="/static/js/instructions.js" type="text/javascript" charset="utf-8"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-    
-</head>
-<body>
+    {% block scripts %}
+    {% endblock %}
+  </head>
+  <body>
     <div class="container">
-        <div id="description" class="instruction">
-            <h1>What's this?</h1>
-            You will be asked to sort a set of images into groups of similar images.
-        </div>
-        <div id="sorting" class="instruction">
-            <h1>Sorting</h1>
-            Click and drag images from the "Next Image" box into a group on the screen.
-        </div>
-        <div id="adding groups" class="instruction">
-            <h1>Adding Groups</h1>
-            Click "Add Group" on the left to create a new group. You can divide the images between as many as 8 groups.
-        </div>
-        <div id="completing" class="instruction">
-            <h1>Mechanical Turking</h1>
-            Once you have placed the last image from the "Next Image" box on the board, a "Finished" screen will be shown. You can copy the trial ID shown here into your Mechanical Turk form in order to be paid for your work.
-        </div>
-        <div id="thanks" class="instruction">
-            <h1> Thanks for your help! </ h1 >
-        </div>
-        <a id='play' href="/sorter">Go!</a>
+      <div id="description" class="instruction">
+        <h1>What's this?</h1>
+        You will be asked to sort a set of images into groups of similar images.
+      </div>
+      <div id="sorting" class="instruction">
+        <h1>Sorting</h1>
+        Click and drag images from the "Next Image" box into a group on the screen.
+      </div>
+      <div id="adding groups" class="instruction">
+        <h1>Adding Groups</h1>
+        Click "Add Group" on the left to create a new group. You can divide the images between as many as 8 groups.
+      </div>
+      <div class="instruction">
+        {% block extra_instructions %}
+        {% endblock %}
+      </div>
+      <div id="thanks" class="instruction">
+        <h1> Thanks for your help! </h1 >
+      </div>
+      <form method="POST" action="">
+        {% block extra_fields %}
+        {% endblock %}
+        <input id="play" type="submit" value="Go!"></input>
+      </form>
     </div>
-</body>
+  </body>
 </html>

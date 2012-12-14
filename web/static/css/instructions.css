@@ -38,6 +38,16 @@ body {
 .instruction h1 {
     font-size: 28px;
 }
+
+form {
+    text-align: center;
+}
+
+form > * {
+    margin: 15px 5px;
+    font-size: 18px;
+}
+
 /*
  * ID: play
  * Button to start the game

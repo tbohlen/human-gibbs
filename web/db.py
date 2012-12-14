@@ -12,12 +12,13 @@ connection = MongoClient()
 db = connection['human-gibbs']
 fs = GridFS(db)
 
+### Adding and reading image ###
+
 # check if a path referes to an image file
 def is_image(file_path):
     image_extensions = ['.jpg','.png','.jpeg', '.jpe', '.gif']
     file_name, file_ext = splitext(file_path)
     return isfile(file_path) and file_ext in image_extensions
-
 
 # adds an image set. Uses the directory name for the folder path. Returns the
 # objectId for the image document
@@ -131,21 +132,24 @@ def write_image_set(image_set_name, target_dir):
         
         with open(filenames[i], 'wb') as f:
             f.write(image.read())
-    
-# add a trial to the system, returns string of the ID for the trial. 
-def add_trial(init_state, image_set):
-    trial_id = db.trials.insert({'init_state': init_state,
-                                 'moves': [],
-                                 'image_set': DBRef('images', image_set['_id'])})
-    return str(trial_id)
 
 def get_image_file(image_id):
     # get the image
     return fs.get(ObjectId(image_id))
 
+### Adding trials ###
+    
+# add a trial to the system, returns string of the ID for the trial. 
+def add_trial(init_state, image_set, tester):
+    trial_id = db.trials.insert({'init_state': init_state,
+                                 'moves': [],
+                                 'image_set': DBRef('images', image_set['_id']),
+                                 'tester': tester})
+    return str(trial_id)
+
 # adds a trial based off a random image set from the database. All images are
 # assumed to not start on the board, i.e., all images are unstaged
-def add_unstaged_trial():
+def add_unstaged_trial(tester):
     # get a cursor over the image sets
     image_sets = db.images.find()
 
@@ -161,7 +165,9 @@ def add_unstaged_trial():
                            'x': -1,
                            'y': -1})
 
-    return add_trial(init_state, image_set)
+    return add_trial(init_state, image_set, tester)
+
+### Adding moves ###
 
 # add a move to a trial. Takes the trial ID as a string
 def add_move(trial_id, move):
