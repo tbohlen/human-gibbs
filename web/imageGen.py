@@ -25,6 +25,41 @@ def generateMatrix(baseMatrix, randomization, filterSize):
         newMatrix.append(newRow)
     return gaussianFilter(newMatrix, filterSize)
 
+# downsamples to 5x5 chunks and randomizes
+def generateImage(size, chunkSize, filterSize):
+    matrix = zeros([size, size])
+    for i in range(int(size/chunkSize)):
+        for j in range(int(size/chunkSize)):
+            val = random.uniform(0.0, 256.0)
+            for m in range(chunkSize):
+                for n in range(chunkSize):
+                    matrix[i*chunkSize + m][j*chunkSize + n] = val
+    return gaussianFilter(matrix, filterSize)
+
+def generateImages(rootPath, num, size, filterSize=10, chunkSize=5):
+    for i in range(num):
+        randomImage = generateImage(size, chunkSize, filterSize)
+        path = join(rootPath, str(i) + ".png")
+        # save the image
+        saveMatrixAsImage(randomImage, path)
+
+    # now that everything is saved in the filesystem, load it to the db
+    saved = False
+    base = basename(rootPath)
+    name = base
+    number = 0
+    while not saved:
+        try:
+            saved = True
+            db.add_image_set(rootPath, name)
+        except ValueError:
+            name = base + str(number)
+            number += 1
+            saved = False
+        except TypeError:
+            saved = False
+            raise
+
 # bounds value so that it is not larger than high and no smaller than low
 def clamp(low, high, val):
     if high < val:
@@ -38,6 +73,7 @@ def gaussianValue(mean, sd, x):
     exponent = -1 * pow( (x - mean), 2) / (2 * sd * sd)
     return exp(exponent) / (sqrt(2 * pi * sd * sd))
 
+# returns a set of discrete values sampled at evenly spaced locations on a gaussian
 def discreteGaussian(num, mean=0.5, sd=0.2):
     return [gaussianValue(mean, sd, float(x+1)/(num+1)) for x in range(int(num))]
 

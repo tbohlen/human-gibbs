@@ -62,15 +62,16 @@ def add_image_set_by_array(images, parents, name):
 
 # adds an image set. Uses the directory name for the folder path. Returns the
 # objectId for the image document
-def add_image_set(dir_path):
+def add_image_set(dir_path, name=None):
     # get all the images
     paths = [join(dir_path, f) for f in listdir(dir_path)] # get full paths
     images = filter(is_image, paths) # keep only image files
 
     # get name for set from folder name
-    name = basename(dir_path)
+    if name == None:
+        name = basename(dir_path)
     if db.images.find_one({'name': name}) != None:
-        raise Exception(('An image set with the name %s already exists. Please ' +
+        raise ValueError(('An image set with the name %s already exists. Please ' +
                          'change the folder name and try uploading again.') % name)
 
     # put all the images into gridFS, save their object IDs
@@ -80,7 +81,7 @@ def add_image_set(dir_path):
             data = f.read()
             content_type = guess_type(image)[0]
             if content_type == None:
-                raise Exception(('Couldn\'t guess the file extension for %s. ' +
+                raise TypeError(('Couldn\'t guess the file extension for %s. ' +
                                  'Check the filename.') % image)
             image_id = fs.put(data, content_type=content_type)
             image_list.append({'image_id': image_id})
