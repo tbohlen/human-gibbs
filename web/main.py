@@ -7,9 +7,10 @@ from flask import Flask, render_template, request, make_response, send_file, red
 import db
 import json
 import os
+import imageGen
 
 app = Flask(__name__)
-app.config['DEBUG'] = False
+app.config['DEBUG'] = True
 
 # if in DEBUG mode, set static resources to expire immediately
 if app.config['DEBUG']:
@@ -36,6 +37,27 @@ def initialize_trial(name):
 
     # return the response
     return resp
+
+@app.route("/gen", methods=['GET', 'POST'])
+def showGen():
+    if request.method == "GET":
+        return render_template("generate.html")
+    else:
+        # find an unused file
+        base = "set"
+        name = os.path.normpath(base)
+        number = 0
+        while os.path.exists(name):
+            number += 1
+            name = base + str(number)
+            os.path.normpath(name)
+        # generate images
+        print "Generating " + name
+        os.mkdir(name)
+        imageGen.generateImages(name)
+        print "Returning"
+        # return the set number
+        return "Set " + str(number) + " generated.", 200
 
 @app.route("/turker", methods=['GET','POST'])
 def turker():
