@@ -53,9 +53,8 @@ body {
     -webkit-border-radius: 0px 0px 10px 10px; 
     border-radius: 0px 0px 10px 10px;
     width: 122px;
-    height: 184px;
+    height: 234px;
     padding-top: 6px;
-
     text-align: center;
 }
 
@@ -149,14 +148,14 @@ body {
     left: 11px;
     text-align: center;
     cursor: pointer;
-    border: 1px solid #9999A0;
-    background-color: #555555;
+    border: 1px solid #555555;
+    background-color: #888888;
     -moz-border-radius: 4px 4px 4px 4px;
     -webkit-border-radius: 4px 4px 4px 4px; 
     border-radius: 4px 4px 4px 4px;
 }
 #addGroup:hover {
-    background-color: #888888;
+    background-color: #AAAAAA;
 }
 
 /*
@@ -214,3 +213,24 @@ body {
     user-select: none;
 }
 
+/*
+ * ID: counter
+ * Span indicating how many images are left
+ */
+#counter {
+    display: inline-block;
+}
+
+/*
+ * ID: counterDiv
+ * Section containing the counter and associated text in nextImage.
+ */
+#counterDiv {
+    position: absolute;
+    display: block;
+    margin: auto;
+    bottom: 46px;
+    height: 52px;
+    width: 100px;
+    left: 11px;
+}

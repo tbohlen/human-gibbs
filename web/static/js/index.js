@@ -125,6 +125,7 @@ function loadImages() {
         url: "/images",
         success: function(data) {
             var imageIDs = JSON.parse(data);
+            gibbs.counter = imageIDs.length + 1;
             for (i = 0; i < imageIDs.length; i++) {
                 var id = imageIDs[i];
                 var newImage = new Image("/images/" + id, gibbs.game, id);
@@ -184,6 +185,15 @@ function endTrial() {
 }
 
 /*
+ * Function: decrimentCounter
+ * Lowers the on screen counter of the number of images to go by 1.
+ */
+function decrimentCounter() {
+    gibbs.counter--;
+    $("#counter").text(gibbs.counter.toString())
+}
+
+/*
  * Function: showImage
  * Shows the next image in the next image area.
  */
@@ -195,6 +205,7 @@ function showImage() {
         var image = gibbs.images[gibbs.nextImage];
         image.moveTo([-116, 30]);
         image.addToScreen();
+        decrimentCounter();
         gibbs.nextImage++;
     }
 }
@@ -416,13 +427,16 @@ Image.prototype.validDrag = function(ev, pos) {
   // make sure trial isn't finished
   valid = valid && !gibbs.trialFinished;
 
+  // get the group the image is being moved into
+  var newGroup = getGroup(pos)
+
   // if only one placement per image, make sure image hasn't been moved before
   if (ONE_PLACEMENT_PER_IMAGE) {
-    valid = valid && !this.unstaged;
+    valid = valid && (!this.unstaged || newGroup == this.group)
   }
 
   // make sure image is in a group location
-  valid = valid && (getGroup(pos) != -1)
+  valid = valid && (newGroup != -1)
 
   return valid
 }
@@ -440,8 +454,9 @@ Image.prototype.validDrag = function(ev, pos) {
 Image.prototype.endDrag = function(ev, pos) {
     // make sure the drag is valid
     if (!this.validDrag(ev, pos)) {
-      this.cancelDrag(ev);
-    } else {
+        this.cancelDrag(ev);
+    }
+    else {
       // check which group it is in
       var groupID = getGroup(pos);
 
