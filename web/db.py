@@ -1,4 +1,3 @@
-from pymongo import MongoClient
 from bson.objectid import ObjectId
 from bson.dbref import DBRef
 from gridfs import GridFS
@@ -6,10 +5,24 @@ from os import listdir, makedirs
 from os.path import isfile, join, splitext, basename, exists
 from mimetypes import guess_type, guess_extension
 from numpy.random import randint
+import os
+import pymongo
 
-# connect to the mongo cdatabase and gridFS
-connection = MongoClient()
-db = connection['human-gibbs']
+MONGO_URL = os.environ.get('MONGOHQ_URL')
+
+# connect to mongo
+if MONGO_URL:
+    # Get a connection
+    conn = pymongo.Connection(MONGO_URL)
+    
+    # Get the database
+    db = conn[urlparse(MONGO_URL).path[1:]]
+else:
+    # Not on an app with the MongoHQ add-on, do some localhost action
+    conn = pymongo.Connection('localhost', 27017)
+    db = conn['human-gibbs']
+
+# connect gridFS
 fs = GridFS(db)
 
 ### Adding and reading image ###
