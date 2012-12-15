@@ -17,6 +17,7 @@ gibbs.groups = [];
 gibbs.images = [];
 gibbs.objects = {};
 gibbs.trialFinished = false;
+gibbs.highestZ = 2;
 
 /*
  * Function: cancel
@@ -405,6 +406,8 @@ Image.prototype.moveTo = function(newPos, groupLimit) {
  */
 Image.prototype.startDrag = function(ev, pos) {
     this.lastSolidPos = [this.pos[0], this.pos[1]];
+    this.object.css('z-index', gibbs.highestZ);
+    gibbs.highestZ += 1;
     this.object.addClass('dragImage');
 };
 
@@ -472,7 +475,9 @@ Image.prototype.endDrag = function(ev, pos) {
       this.moveTo(this.perfectPos);
 
       // record the data from the move
-      sendMoveData(this, groupID);
+      if (this.group != groupID) {
+        sendMoveData(this, groupID);
+      }
 
       // update variables that store previous state
       this.lastSolidPos = [this.pos[0], this.pos[1]];
