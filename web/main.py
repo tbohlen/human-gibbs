@@ -10,7 +10,7 @@ import os
 import imageGen
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 
 # if in DEBUG mode, set static resources to expire immediately
 if app.config['DEBUG']:
