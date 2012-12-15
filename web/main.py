@@ -17,7 +17,7 @@ if app.config['DEBUG']:
 @app.route("/")
 def start():
     # generate the HTML for the trial
-    resp = make_response(render_template("instructions.html"))
+    resp = make_response(render_template("landing.html"))
     return resp
 
 def initialize_trial(name):
