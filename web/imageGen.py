@@ -28,17 +28,36 @@ def generateMatrix(baseMatrix, randomization, filterSize):
 # downsamples to 5x5 chunks and randomizes
 def generateImage(size, chunkSize, filterSize):
     matrix = zeros([size, size])
+    mean = random.uniform(0, 255)
+    sd = 100
     for i in range(int(size/chunkSize)):
         for j in range(int(size/chunkSize)):
-            val = random.uniform(0.0, 256.0)
+            val = clamp(0, 255, random.normal(mean, sd))
             for m in range(chunkSize):
                 for n in range(chunkSize):
                     matrix[i*chunkSize + m][j*chunkSize + n] = val
     return gaussianFilter(matrix, filterSize)
 
-def generateImages(rootPath, num, size, filterSize=10, chunkSize=5):
+def generatePositionImage(size, chunkSize, filterSize):
+    matrix = zeros([size, size])
+    mean = random.uniform(50, 205)
+    sd = 50
+    posMean = random.uniform(0, size/chunkSize, 2)
+    for i in range(int(size/chunkSize)):
+        for j in range(int(size/chunkSize)):
+            dist = ( (i - posMean[0])**2 + (j - posMean[1]) ** 2 ) ** (0.2)
+            val = clamp(0, 255, random.normal(mean/dist, sd))
+            for m in range(chunkSize):
+                for n in range(chunkSize):
+                    matrix[i*chunkSize + m][j*chunkSize + n] = val
+    return gaussianFilter(matrix, filterSize)
+
+def generateImages(rootPath, num, size, filterSize=10, chunkSize=5, t="pos"):
     for i in range(num):
-        randomImage = generateImage(size, chunkSize, filterSize)
+        if t == "pos":
+            randomImage = generatePositionImage(size, chunkSize, filterSize)
+        else:
+            randomImage = generateImage(size, chunkSize, filterSize)
         path = join(rootPath, str(i) + ".png")
         # save the image
         saveMatrixAsImage(randomImage, path)
