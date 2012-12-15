@@ -103,4 +103,4 @@ def trial_id():
     return json.dumps(request.cookies.get('trial_id'))
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')
