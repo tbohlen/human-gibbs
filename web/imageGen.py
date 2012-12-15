@@ -26,10 +26,9 @@ def generateMatrix(baseMatrix, randomization, filterSize):
     return gaussianFilter(newMatrix, filterSize)
 
 # downsamples to 5x5 chunks and randomizes
-def generateImage(size, chunkSize, filterSize):
+def generateImage(size, chunkSize, filterSize, sd=100):
     matrix = zeros([size, size])
     mean = random.uniform(0, 255)
-    sd = 100
     for i in range(int(size/chunkSize)):
         for j in range(int(size/chunkSize)):
             val = clamp(0, 255, random.normal(mean, sd))
@@ -38,26 +37,29 @@ def generateImage(size, chunkSize, filterSize):
                     matrix[i*chunkSize + m][j*chunkSize + n] = val
     return gaussianFilter(matrix, filterSize)
 
-def generatePositionImage(size, chunkSize, filterSize):
+def generatePositionImage(size, chunkSize, filterSize, sd=100):
     matrix = zeros([size, size])
     mean = random.uniform(50, 205)
-    sd = 50
+    #neg = random.uniform(0.0, 1.0)
     posMean = random.uniform(0, size/chunkSize, 2)
     for i in range(int(size/chunkSize)):
         for j in range(int(size/chunkSize)):
-            dist = ( (i - posMean[0])**2 + (j - posMean[1]) ** 2 ) ** (0.2)
+            dist = ( (i - posMean[0])**2 + (j - posMean[1]) ** 2 ) ** (0.1)
             val = clamp(0, 255, random.normal(mean/dist, sd))
+            #if neg > 0.5:
+            #val = 255-val
             for m in range(chunkSize):
                 for n in range(chunkSize):
                     matrix[i*chunkSize + m][j*chunkSize + n] = val
     return gaussianFilter(matrix, filterSize)
 
-def generateImages(rootPath, num, size, filterSize=10, chunkSize=5, t="pos"):
+# default values create a good group for testin
+def generateImages(rootPath, num=40, size=100, filterSize=15, chunkSize=10, sd=50, t="pos"):
     for i in range(num):
         if t == "pos":
-            randomImage = generatePositionImage(size, chunkSize, filterSize)
+            randomImage = generatePositionImage(size, chunkSize, filterSize, sd)
         else:
-            randomImage = generateImage(size, chunkSize, filterSize)
+            randomImage = generateImage(size, chunkSize, filterSize, sd)
         path = join(rootPath, str(i) + ".png")
         # save the image
         saveMatrixAsImage(randomImage, path)
