@@ -7,6 +7,7 @@ from mimetypes import guess_type, guess_extension
 from numpy.random import randint
 import os
 import pymongo
+from urlparse import urlparse
 
 MONGO_URL = os.environ.get('MONGOHQ_URL')
 
