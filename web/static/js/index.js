@@ -199,6 +199,7 @@ function decrimentCounter() {
  * Shows the next image in the next image area.
  */
 function showImage() {
+    decrimentCounter();
     if (gibbs.nextImage >= gibbs.images.length) {
       endTrial();
     }
@@ -206,7 +207,6 @@ function showImage() {
         var image = gibbs.images[gibbs.nextImage];
         image.moveTo([-116, 30]);
         image.addToScreen();
-        decrimentCounter();
         gibbs.nextImage++;
     }
 }
