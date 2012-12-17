@@ -51,3 +51,24 @@ and an `'images'` field. The `'images'` field is a list of image dicts.  Each
 will have at least the key `'image_id'` corresponding to its ObjectIds in
 the GridFS system; to get the appropriate image need to run `fs.get(id)` from
 a GridFS object created for the `'human-gibbs'` db
+
+## Pulling data from MongoHQ
+Get the username, password, etc. from the MONGO\_URL environment variable on
+Heroku.  The MONGO\_URL environment variable will be of the form:
+
+```
+MONGOHQ_URL: mongodb://<username>:<password>@<host>:<port>/<db-name>
+```
+
+Then run the following command:
+
+```
+$ mongodump -h <host>:<port> -d <db-name> -u <username> -p <password> -o /path/to/dump
+```
+
+To put this data into your local instance of MongoDB (assuming it is on the
+default port and doesn't require authentication), run:
+
+```
+$ mongorestore -d human-gibbs /path/to/dump --drop
+```

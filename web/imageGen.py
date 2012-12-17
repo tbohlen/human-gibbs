@@ -146,7 +146,7 @@ def loadImage(path):
 
 """
 Function: saveMatrixAsImage
-Saves a black and white image file generated from the provided matrix at the specified path. Updamples the image by a factor of 9 (9 pixels per matrix entry)
+Saves a black and white image file generated from the provided matrix at the specified path. Upsamples the image by a factor of 9 (9 pixels per matrix entry)
 
 Parameters:
 matrix - the matrix of values (1s and 0s) to be converted to an image

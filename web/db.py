@@ -152,7 +152,21 @@ def get_image_file(image_id):
     # get the image
     return fs.get(ObjectId(image_id))
 
-### Adding trials ###
+# returns a list of all image sets
+def get_all_image_sets():
+    # list of image sets
+    image_sets = []
+    
+    # get a cursor over the sets
+    set_cursor = db.images.find()
+
+    # add all image_sets
+    for i in range(set_cursor.count()):
+        image_sets.append(set_cursor[i])
+        
+    return image_sets
+
+### Adding and getting trials ###
     
 # add a trial to the system, returns string of the ID for the trial. 
 def add_trial(init_state, image_set, tester):
@@ -181,6 +195,9 @@ def add_unstaged_trial(tester):
                            'y': -1})
 
     return add_trial(init_state, image_set, tester)
+
+def get_trial(trial_id):
+    return db.trials.find_one({'_id': ObjectId(trial_id)})
 
 ### Adding moves ###
 
