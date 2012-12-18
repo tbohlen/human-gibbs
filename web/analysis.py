@@ -95,6 +95,54 @@ def log_prior(oldPartition, group):
         return log(DISPERSION_PARAMETER / denominator)
     else:
         return log(num_in_group / denominator)
+
+"""
+Function: discete_trunc_t_logpdf
+
+Calulates a discrete truncated logpdf for a given set of values
+
+Parameters:
+x - array-like values to be compared
+df - array-like the degrees of freedom
+loc - array-like the center point of the t distribution
+scale - array-like the scale of the t distribution
+domain: list of the allowed values in the domain of the discrete distribution
+
+Returns:
+The log_prob for the x values
+"""
+def discete_trunc_t_logpdf(x, df, domain, loc=0, scale=1):
+    # get the indices of the values we are interested in
+    indices = empty(x.shape)
+    for index, val in ndenumerate(x):
+        indices[index] = domain.index(val)
+
+    # number of elements in domain
+    n = len(domain)
+    
+    # the shape for each of the values in the domain
+    shape = (n,) + x.shape
+
+    # get the values from the unmodified t over the domain
+    all_log_prob = empty(shape)
+    for i in range(n):
+        all_log_prob[i] = t.logpdf(domain[i]*ones(x.shape), df, loc=loc, scale=scale)
+
+    # normalize these values
+    total_log_prob = logaddexp.reduce(all_log_prob, axis=0)
+    norm_log_prob = all_log_prob - total_log_prob
+
+    # get the values needed to return
+    log_prob = empty(x.shape)
+    for i, val in ndenumerate(x):
+        # first get the index of the domain that x is at
+        index = domain.index(val)
+
+        # now get the appropriate value for the log_prob of x
+        log_prob[i] = norm_log_prob[(index,)+i]
+
+    return log_prob
+        
     
 """
 Function: log_likelihood
@@ -107,7 +155,7 @@ current_partition - the current partitioning of the other images
 group_num - the group that the current image would be assigned to
 move - the move dict holding the information about the current move
 """
-def log_likelihood(current_partition, group_num, move):
+def log_likelihood(current_partition, group_num, image_id):
     # the images grouped so far
     images = images_in_group(current_partition, group_num)
 
@@ -115,7 +163,7 @@ def log_likelihood(current_partition, group_num, move):
     n = len(images)
 
     # matrix for image
-    image_matrix = get_image_matrix(move['image_id'])
+    image_matrix = get_image_matrix(image_id)
 
     # get the shape for the group
     image_shape = image_matrix.shape
@@ -141,7 +189,7 @@ def log_likelihood(current_partition, group_num, move):
     scale = sig_sq * (1 + 1 / l)
 
     # calculate the log probability over each dimension
-    log_p = t.logpdf(image_matrix, a, loc=mu, scale=scale)
+    log_p = discete_trunc_t_logpdf(image_matrix, a, range(256), loc=mu, scale=scale)
 
     return sum(log_p)
 
@@ -178,7 +226,7 @@ def move_probability(current_partition, image_id, newGroup=None):
     for group in groups:
         # the probability of a given move is the likelihood times the prior given the move that happened and all prior data
         likelihood = log_likelihood(current_partition, group, image_id)
-        prior = prior_probability(current_partition, group)
+        prior = log_prior(current_partition, group)
         moveProbabilities[group] = likelihood + prior
 
     # normalize all the probabilities properly
@@ -216,7 +264,7 @@ def compare_trial(trial_id, move_probability):
     # iterate over each move in the trial
     for move in trial['moves']:
         # calculate the normalized log probability of each potential move according to the particle filter
-        probs = move_probability(current_partition, move.image_id)
+        probs = move_probability(current_partition, move['image_id'])
 
         # augment the move object
         move['move_probs'] = probs
@@ -257,11 +305,19 @@ l - the list to randomize
 """
 def randomize(l):
     for i in range(len(l) - 1, -1, -1):
+<<<<<<< Updated upstream
         randIndex = floor(random.uniform(0, i+1))
         switchElem = l[randIndex]
         otherElem = l[i]
         l[randInd] = otherElem
         l[i] = switchElem
+=======
+        randIndex = floor(random.uniform(0, i+1));
+        switchElem = l[randIndex];
+        otherElem = l[i];
+        l[randInd] = otherElem;
+        l[i] = switchElem;
+>>>>>>> Stashed changes
 
 """
 Function: decide_group
