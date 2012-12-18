@@ -2,14 +2,16 @@ import db
 import imageGen
 import json
 import operator
+import os
+from PIL import Image
 from math import floor
 from numpy import *
 from scipy.stats import t
 
-mu0 = 255 / 256.0 # prior mean
-l0 = 1 # confidence in prior mean
-sig_sq0 = (256 / 4.0)**2 # prior variance
-a0 = 1 # confidence in prior variance
+mu0 = 255.0 / 2.0 # prior mean
+l0 = 0.05 # confidence in prior mean
+sig_sq0 = (256.0 / 4.0)**2 # prior variance
+a0 = 0.05 # confidence in prior variance
 
 DISPERSION_PARAMETER = 10.0
 
@@ -169,7 +171,7 @@ def log_likelihood(current_partition, group_num, image_id):
         # get the shape for the group
         image_shape = image_matrix.shape
         shape = (n, image_shape[0], image_shape[0])
-    
+
         # get the matricies for all the images in the group
         group = empty(shape)
         for i in range(n):
@@ -236,6 +238,7 @@ def move_probability(current_partition, image_id, newGroup=None):
     for key, val in moveProbabilities.iteritems():
         moveProbabilities[key] = val - total
 
+
     return moveProbabilities
 
 """
@@ -266,7 +269,7 @@ def compare_trial(trial_id, move_probability):
     # iterate over each move in the trial
     for move in trial['moves']:
         # calculate the normalized log probability of each potential move according to the particle filter
-        probs = move_probability(current_partition, move['image_id'])
+        probs = move_probability(current_partition, move['image_id'], move['group'])
 
         # augment the move object
         move['move_probs'] = probs
@@ -328,7 +331,13 @@ def decide_group(partition, image_id):
     probabilities = move_probability(partition, image_id)
     print 'Probabilities:', probabilities
     sorted_probabilities = sorted(probabilities.iteritems(), key=operator.itemgetter(1))
-    return (probabailities, sorted_probabilities[0][0])
+    maxVal = -inf
+    group = -1
+    for key, val in probabilities.iteritems():
+        if val > maxVal:
+            group = key
+            maxVal = val
+    return (probabilities, group)
 
 """
 Function: sort_image_set
@@ -360,14 +369,18 @@ def sort_image_set(set_id):
     return (probs, partition)
 
 """
-Function: sort_random_set
-Sorts a set in the the database. Actually just sorts the first set every time.
-Prints out the groupings of the images
+Function: sort_and_print_set
+Prints out the groupings of the images in the set given by the provided id
+
+Parameters:
+set_id - the id of the image set to sort
 """
-def sort_random_set():
-    # choose a set
-    image_sets = db.get_all_image_sets()
-    set_id = image_sets[0]['_id']
+def sort_and_print_set(set_id=None):
+    if set_id == None:
+        # choose a set
+        image_sets = db.get_all_image_sets()
+        set_id = image_sets[0]['_id']
+
     print "Sorting image set with id " + str(set_id)
 
     # partition it
@@ -378,24 +391,29 @@ def sort_random_set():
     base = "./sort"
     name = base
     number = 0
-    while os.path.exists(name + ".json") or os.path.exists(name + ".txt"):
+    while os.path.exists(name) or os.path.exists(name + ".txt"):
         name = base + str(number)
         number += 1
-    f = open(name + ".json")
-    json.dump({'probabilities': probs, 'partition': partition), f)
-    f.close()
 
     # print the results
-    f = open(name + ".txt")
+    os.makedirs(name + "/")
+    f = open(name + ".txt", 'w')
     f.write("SORT\n")
     groups = groups_in_partition(partition)
     for group in groups:
         print "Group " + str(group) + ":"
         f.write("Group " + str(group) + ":\n")
-        group_images = images_in_group(group)
+        group_images = images_in_group(partition, group)
+        i = 0
+
         for image in group_images:
-            print "\t" + str(db.get_image_file(image))
-            f.write("\t" + str(db.get_image_file(image)) + "\n")
+            fileName = name + "/" + str(group) + "-" + str(i) + ".png"
+            imageObj = Image.open(db.get_image_file(image))
+            imageObj.save(fileName, "PNG")
+            print "\t" + fileName
+            f.write("\t" + fileName + "\n")
+            i += 1
+
     print "DONE"
     f.write("DONE\n")
     f.close()

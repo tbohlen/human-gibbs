@@ -53,6 +53,41 @@ def generatePositionImage(size, chunkSize, filterSize, sd=100):
                     matrix[i*chunkSize + m][j*chunkSize + n] = val
     return gaussianFilter(matrix, filterSize)
 
+def bwImage(size):
+    matrix = zeros([size, size])
+    white = int(floor(random.uniform(0.0, 2.0)))
+    for i in range(int(size)):
+        for j in range(int(size)):
+            if white == 1.0:
+                matrix[i][j] = 255
+            else:
+                matrix[i][j] = 0
+    return matrix
+
+# default values create a good group for testin
+def generateBW(rootPath, num=40, size=100):
+    for i in range(num):
+        randomImage = bwImage(size)
+        path = join(rootPath, str(i) + ".png")
+        # save the image
+        saveMatrixAsImage(randomImage, path)
+
+    # now that everything is saved in the filesystem, load it to the db
+    saved = False
+    base = basename(rootPath)
+    name = base
+    number = 0
+    while not saved:
+        try:
+            saved = True
+            db.add_image_set(rootPath, name)
+        except ValueError:
+            name = base + str(number)
+            number += 1
+            saved = False
+        except TypeError:
+            saved = False
+            raise
 # default values create a good group for testin
 def generateImages(rootPath, num=40, size=100, filterSize=15, chunkSize=10, sd=50, t="pos"):
     for i in range(num):
