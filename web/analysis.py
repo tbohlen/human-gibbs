@@ -159,30 +159,32 @@ def log_likelihood(current_partition, group_num, image_id):
     # the images grouped so far
     images = images_in_group(current_partition, group_num)
 
-    # number of images
-    n = len(images)
-
     # matrix for image
     image_matrix = get_image_matrix(image_id)
 
-    # get the shape for the group
-    image_shape = image_matrix.shape
-    shape = (n, image_shape[0], image_shape[0])
+    # number of images
+    n = len(images)
+
+    if n > 0:
+        # get the shape for the group
+        image_shape = image_matrix.shape
+        shape = (n, image_shape[0], image_shape[0])
     
-    # get the matricies for all the images in the group
-    group = empty(shape)
-    for i in range(n):
-        group[i] = get_image_matrix(images[i])
+        # get the matricies for all the images in the group
+        group = empty(shape)
+        for i in range(n):
+            group[i] = get_image_matrix(images[i])
 
-    # calculate parameters common to all dimensions
-    l = l0 + n
-    a = a0 + n
-
-    # get mean, variance matrix
-    group_mean = mean(group, axis=0)
-    group_var = var(group, axis=0)
+        # get mean, variance matrix
+        group_mean = mean(group, axis=0)
+        group_var = var(group, axis=0)
+    else:
+        group_mean = 0
+        group_var = 0
 
     # calculate the parameters of the student_t distribution
+    l = l0 + n
+    a = a0 + n
     mu = (l0 * mu0 + n * group_mean) / l
     sig_sq = (a0 * sig_sq0 + (n - 1) * group_var +
               l0 * n * (mu0 - group_mean) ** 2 / l) / a
@@ -324,7 +326,8 @@ The group to add the image to.
 """
 def decide_group(partition, image_id):
     probabilities = move_probability(partition, image_id)
-    sorted_probabilities = sorted(x.iteritems(), key=operator.itemgetter(1))
+    print 'Probabilities:', probabilities
+    sorted_probabilities = sorted(probabilities.iteritems(), key=operator.itemgetter(1))
     return sorted_probabilities[0][0];
 
 """
@@ -346,10 +349,11 @@ def sort_image_set(set_id):
 
     # for each image in the list, run it through the algoritm
     partition = {}
-    for image_id in images:
+    for image in images:
+        image_id = str(image['image_id'])
         group = decide_group(partition, image_id)
         print "Adding image to group " + str(group)
-        partition[image_id] == group
+        partition[image_id] = group
 
     return partition
 
