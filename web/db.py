@@ -199,6 +199,10 @@ def add_unstaged_trial(tester):
 def get_trial(trial_id):
     return db.trials.find_one({'_id': ObjectId(trial_id)})
 
+def get_all_trials():
+    # return all the trials in the database
+    return db.trials.find()
+
 ### Adding moves ###
 
 # add a move to a trial. Takes the trial ID as a string
