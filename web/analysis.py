@@ -56,7 +56,6 @@ def images_in_group(partition, group):
     return group_members
 
 """
-<<<<<<< Updated upstream
 Function: groups_in_partition
 Calculate the number of groups currently being used by the partition
 
@@ -75,11 +74,8 @@ def groups_in_partition(partition):
 
 """
 Function: log_prior
-=======
-Function: prior_probability
->>>>>>> Stashed changes
 
-Calculate the probability of a given partition of i+1 elements given the partition of i elements.
+Calculate the log probability of a given partition of i+1 elements given the partition of i elements.
 
 Parameters:
 oldPartition - the old partitioning of the previous i elements
@@ -88,25 +84,15 @@ group - the group that the new object is being added to
 Returns:
 The probability of the new partition given the old
 """
-<<<<<<< Updated upstream
 def log_prior(oldPartition, group):
-=======
-def prior_probability(oldPartition, group):
->>>>>>> Stashed changes
     i = len(oldPartition)
     num_in_group = len(images_in_group(oldPartition, group)) + 1
     denominator = i - 1.0 + DISPERSION_PARAMETER
     if num_in_group == 1:
         # this is the only image in this group
-<<<<<<< Updated upstream
         return log(DISPERSION_PARAMETER / denominator)
     else:
         return log(num_in_group / denominator)
-=======
-        return DISPERSION_PARAMETER / denominator
-    else:
-        return num_in_group / denominator
->>>>>>> Stashed changes
     
 """
 Function: log_likelihood
@@ -221,13 +207,6 @@ def compare_trial(trial_id, move_probability):
         image_id = str(image['_id'])
         current_partition[image_id] = image['group']
 
-<<<<<<< Updated upstream
-=======
-    # a list of the probabilities of each move that the human made in the trial,
-    # according to the particle fliter
-    prob_of_moves = []
-
->>>>>>> Stashed changes
     # iterate over each move in the trial
     for move in trial['moves']:
         # calculate the normalized log probability of each potential move according to the particle filter
