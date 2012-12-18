@@ -1,5 +1,6 @@
 import db
 import imageGen
+import json
 from numpy import *
 
 DISPERSION_PARAMETER = 10.0
@@ -49,7 +50,24 @@ def images_in_group(partition, group):
     return group_members
 
 """
-Function: prior_probability
+Function: groups_in_partition
+Calculate the number of groups currently being used by the partition
+
+Parameters:
+partition - the partition to count groups in
+
+Returns:
+The number of groups in the partition
+"""
+def groups_in_partition(partition):
+    groups = []
+    for key, val in partition.iteritems():
+        if val not in groups:
+            groups.append(val)
+    return groups
+
+"""
+Function: log_prior
 
 Calculate the probability of a given partition of i+1 elements given the partition of i elements.
 
@@ -60,15 +78,15 @@ group - the group that the new object is being added to
 Returns:
 The probability of the new partition given the old
 """
-def prior_probability(oldPartition, group):
+def log_prior(oldPartition, group):
     i = len(oldPartition)
     num_in_group = len(images_in_group(oldPartition, group)) + 1
     denominator = i - 1.0 + DISPERSION_PARAMETER
     if num_in_group == 1:
         # this is the only image in this group
-        return DISPERSION_PARAMETER / denominator
+        return log(DISPERSION_PARAMETER / denominator)
     else:
-        return num_in_group / denominator
+        return log(num_in_group / denominator)
 
 """
 Function: move_probability
@@ -80,7 +98,31 @@ current_partition - representation of the current partition fo the images.  Is a
 move - dict of the move being made. Same form as in db
 """
 def move_probability(current_partition, move):
-    pass
+    moveProbabilities = {}
+    groups = groups_in_partition(current_partition)
+    if move.group not in groups:
+        # if the move moves the image into a new group, add that group to groups.
+        groups.append(move.group)
+    else:
+        # otherwise, add the minimum val less than 8 to groups
+        for i in range(8):
+            if i not in groups:
+                groups.append(i)
+                break
+
+    # for each of the groups in groups, calculate the probability of that one being selected
+    for group in groups:
+        # the probability of a given move is the likelihood times the prior given the move that happened and all prior data
+        likelihood = log_likelihood(current_partition, group, move)
+        prior = prior_probability(current_partition, group)
+        moveProbabilities[group] = likelihood + prior
+
+    # normalize all the probabilities properly
+    total = logaddexp.reduce(moveProbabilities.values())
+    for key, val in moveProbabilities.iteritems():
+        moveProbabilities[key] = val - total
+
+    return moveProbabilities
 
 """
 Function: compare_trial
@@ -92,7 +134,7 @@ image_set_matricies - a dict of matrices corresponding to an image set. Should b
 move_probability - a function for calculating the probability of a given move.  Takes arguments of current_partition and move, where current_partition is a dict of image_id to group number, and move is a dict for a move
 
 Returns:
-A list of move probabilities, i.e. a list of the probabilities of each move done by the person in the trial.
+Move objects (as described in readme) augmented with move_probs, a dictionary of group-probability pairs, and partition, a dictionary of image_id-group pairs.
 """
 def compare_trial(trial_id, move_probability):
     # get the trial
@@ -108,19 +150,34 @@ def compare_trial(trial_id, move_probability):
         image_id = str(image['_id'])
         current_partition[image_id] = image['group']
 
-    # a list of the probabilities of each move that the human made in the trial,
-    # according to the particle fliter
-    prob_of_moves = []
-
     # iterate over each move in the trial
-    for move in moves:
-        # calculate the probability of the move according to the particle filter
-        p = move_probability(current_partition, move)
+    for move in trial['moves']:
+        # calculate the normalized log probability of each potential move according to the particle filter
+        probs = move_probability(current_partition, move)
 
-        # appends the probability of the move to the list of probabilities
-        prob_of_moves.append(p)
+        # augment the move object
+        move['move_probs'] = probs
+        move['partition'] = copy(current_partition)
 
         # update the current partition
         current_partition[move['image_id']] = move['new_group']
 
-    return prob_of_moves
+    return trial
+
+def run_all_trials():
+    # runs all the trials and writes out all data into a json string saved to results.json
+    trials = db.get_all_trials()
+    trialsData = {}
+    for trial in trials:
+        trial = compare_trial(trial._id, move_probability)
+    # find a results file that does not yet exist
+    base = "./results"
+    name = base
+    number = 0
+    while os.path.exists(name + ".json"):
+        name = base + str(number)
+        number += 1
+    f = open(name + ".json")
+    json.dump(trials, f)
+    f.close()
+
