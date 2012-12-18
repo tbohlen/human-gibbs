@@ -2,6 +2,8 @@ import db
 import imageGen
 from numpy import *
 
+DISPERSION_PARAMETER = 10.0
+
 """
 Function: get_image_matrix
 
@@ -26,7 +28,47 @@ def get_image_matrix(image_id):
     else:
         image_file = db.get_image_file(image_id)
         image_matrices[image_id] = array(imageGen.loadImage(image_file))
-        return imate_matrices[image_id]
+        return image_matrices[image_id]
+
+"""
+Function: images_in_group
+Calculate and return the list of image ids in the gived group.
+
+Parameters:
+partition - the partition of the objects
+group - the group who's images we need to return
+
+Returns:
+A list of images in the group.
+"""
+def images_in_group(partition, group):
+    group_members = []
+    for key, val in partition.iteritems():
+        if val == group:
+            group_members.append(key)
+    return group_members
+
+"""
+Function: prior_probability
+
+Calculate the probability of a given partition of i+1 elements given the partition of i elements.
+
+Parameters:
+oldPartition - the old partitioning of the previous i elements
+group - the group that the new object is being added to
+
+Returns:
+The probability of the new partition given the old
+"""
+def prior_probability(oldPartition, group):
+    i = len(oldPartition)
+    num_in_group = len(images_in_group(oldPartition, group)) + 1
+    denominator = i - 1.0 + DISPERSION_PARAMETER
+    if num_in_group == 1:
+        # this is the only image in this group
+        return DISPERSION_PARAMETER / denominator
+    else:
+        return num_in_group / denominator
 
 """
 Function: move_probability
@@ -39,7 +81,6 @@ move - dict of the move being made. Same form as in db
 """
 def move_probability(current_partition, move):
     pass
-    
 
 """
 Function: compare_trial
@@ -70,7 +111,7 @@ def compare_trial(trial_id, move_probability):
     # a list of the probabilities of each move that the human made in the trial,
     # according to the particle fliter
     prob_of_moves = []
-    
+
     # iterate over each move in the trial
     for move in moves:
         # calculate the probability of the move according to the particle filter
