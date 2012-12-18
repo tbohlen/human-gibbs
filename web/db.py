@@ -166,6 +166,10 @@ def get_all_image_sets():
         
     return image_sets
 
+# return a specific image set
+def get_image_set(set_id):
+    return db.images.find_one({'_id': ObjectId(set_id)})
+
 ### Adding and getting trials ###
     
 # add a trial to the system, returns string of the ID for the trial. 
@@ -201,7 +205,13 @@ def get_trial(trial_id):
 
 def get_all_trials():
     # return all the trials in the database
-    return db.trials.find()
+    trials_cursor = db.trials.find()
+    trials = []
+
+    for i in range(trials_cursor.count()):
+        trials.append(trials_cursor[i])
+
+    return trials
 
 ### Adding moves ###
 

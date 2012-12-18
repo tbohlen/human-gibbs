@@ -1,6 +1,8 @@
 import db
 import imageGen
 import json
+import operator
+from math import floor
 from numpy import *
 from scipy.stats import t
 
@@ -142,7 +144,7 @@ def log_likelihood(current_partition, group_num, move):
     log_p = t.logpdf(image, a, loc=mu, scale=scale)
 
     return sum(log_p)
-    
+
 """
 Function: move_probability
 
@@ -152,15 +154,19 @@ Parameters:
 current_partition - representation of the current partition for the images.  Is a dict where each key is an image ID, and each value is the group number that image is in
 move - dict of the move being made. Same form as in db
 
+current_partition - representation of the current partition fo the images.  Is a dict where each key is an image ID, and each value is the group number that image is in
+newGroup - the group that the image is actually being moved into, if any
+image_id - the id of the image being added to the partition
+
 Returns:
 The probability of the move
 """
-def move_probability(current_partition, move):
+def move_probability(current_partition, image_id, newGroup=None):
     moveProbabilities = {}
     groups = groups_in_partition(current_partition)
-    if move.group not in groups:
+    if newGroup != None and newGroup not in groups:
         # if the move moves the image into a new group, add that group to groups.
-        groups.append(move.group)
+        groups.append(newGroup)
     else:
         # otherwise, add the minimum val less than 8 to groups
         for i in range(8):
@@ -171,7 +177,7 @@ def move_probability(current_partition, move):
     # for each of the groups in groups, calculate the probability of that one being selected
     for group in groups:
         # the probability of a given move is the likelihood times the prior given the move that happened and all prior data
-        likelihood = log_likelihood(current_partition, group, move)
+        likelihood = log_likelihood(current_partition, group, image_id)
         prior = prior_probability(current_partition, group)
         moveProbabilities[group] = likelihood + prior
 
@@ -242,3 +248,61 @@ def run_all_trials():
     json.dump(trials, f)
     f.close()
 
+"""
+Function: randomize
+Randomize the list by permuting in place. Knuth's algorithm
+
+Parameters:
+l - the list to randomize
+"""
+def randomize(l) {
+    for i in range(len(l) - 1, -1, -1):
+        randIndex = floor(random.uniform(0, i+1));
+        switchElem = l[randIndex];
+        otherElem = l[i];
+        l[randInd] = otherElem;
+        l[i] = switchElem;
+    }
+}
+
+"""
+Function: decide_group
+Given an image and a partition, decides with group to add the image to.
+
+Parameters:
+partition - the exisiting partition of the data
+image_id - the id of the image that is going to be added
+
+Returns:
+The group to add the image to.
+"""
+def decide_group(partition, image_id):
+    probabilities = move_probability(partition, image_id)
+    sorted_probabilities = sorted(x.iteritems(), key=operator.itemgetter(1))
+    return sorted_probabilities[0][0];
+
+"""
+Function: sort_image_set
+Returns a sorted set of image groups given sort_image_set. This is a sanity checker for the main job of analysis: analyzing all the sample human data we have gathered.
+
+Parameters:
+set_id - the id of the image set to sort
+"""
+def sort_image_set(set_id):
+    # get the image set
+    image_set = db.get_image_set(set_id)
+
+    # get everything from the images field
+    images = image_set['images']
+
+    # randomize images
+    randomize(images)
+
+    # for each image in the list, run it through the algoritm
+    partition = {}
+    for image_id in images:
+        group = decide_group(partition, image_id)
+        print "Adding image to group " + str(group)
+        partition[image_id] == group
+
+    return partition
