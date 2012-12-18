@@ -365,7 +365,6 @@ def sort_image_set(set_id):
         print "Adding image to group " + str(group)
         partition[image_id] = group
         probs[image_id] = probs
-
     return (probs, partition)
 
 """
