@@ -216,7 +216,7 @@ def compare_trial(trial_id, move_probability):
     # iterate over each move in the trial
     for move in trial['moves']:
         # calculate the normalized log probability of each potential move according to the particle filter
-        probs = move_probability(current_partition, move)
+        probs = move_probability(current_partition, move.image_id)
 
         # augment the move object
         move['move_probs'] = probs
@@ -255,15 +255,13 @@ Randomize the list by permuting in place. Knuth's algorithm
 Parameters:
 l - the list to randomize
 """
-def randomize(l) {
+def randomize(l):
     for i in range(len(l) - 1, -1, -1):
-        randIndex = floor(random.uniform(0, i+1));
-        switchElem = l[randIndex];
-        otherElem = l[i];
-        l[randInd] = otherElem;
-        l[i] = switchElem;
-    }
-}
+        randIndex = floor(random.uniform(0, i+1))
+        switchElem = l[randIndex]
+        otherElem = l[i]
+        l[randInd] = otherElem
+        l[i] = switchElem
 
 """
 Function: decide_group
@@ -328,7 +326,5 @@ def sort_random_set():
         print "Group " + str(group) + ":"
         group_images = images_in_group(group)
         for image in group_images:
-            print "\t" db.get_image_file(image)
+            print "\t" + str(db.get_image_file(image))
     print "DONE"
-    
-
