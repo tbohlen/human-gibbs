@@ -328,7 +328,7 @@ def decide_group(partition, image_id):
     probabilities = move_probability(partition, image_id)
     print 'Probabilities:', probabilities
     sorted_probabilities = sorted(probabilities.iteritems(), key=operator.itemgetter(1))
-    return sorted_probabilities[0][0];
+    return (probabailities, sorted_probabilities[0][0])
 
 """
 Function: sort_image_set
@@ -349,13 +349,15 @@ def sort_image_set(set_id):
 
     # for each image in the list, run it through the algoritm
     partition = {}
+    probs = {}
     for image in images:
         image_id = str(image['image_id'])
-        group = decide_group(partition, image_id)
+        probs, group = decide_group(partition, image_id)
         print "Adding image to group " + str(group)
         partition[image_id] = group
+        probs[image_id] = probs
 
-    return partition
+    return (probs, partition)
 
 """
 Function: sort_random_set
@@ -369,14 +371,31 @@ def sort_random_set():
     print "Sorting image set with id " + str(set_id)
 
     # partition it
-    partition = sort_image_set(set_id)
+    (probs, partition) = sort_image_set(set_id)
     print "Image set sorted"
 
+    # save the results to disk
+    base = "./sort"
+    name = base
+    number = 0
+    while os.path.exists(name + ".json") or os.path.exists(name + ".txt"):
+        name = base + str(number)
+        number += 1
+    f = open(name + ".json")
+    json.dump({'probabilities': probs, 'partition': partition), f)
+    f.close()
+
     # print the results
+    f = open(name + ".txt")
+    f.write("SORT\n")
     groups = groups_in_partition(partition)
     for group in groups:
         print "Group " + str(group) + ":"
+        f.write("Group " + str(group) + ":\n")
         group_images = images_in_group(group)
         for image in group_images:
             print "\t" + str(db.get_image_file(image))
+            f.write("\t" + str(db.get_image_file(image)) + "\n")
     print "DONE"
+    f.write("DONE\n")
+    f.close()
