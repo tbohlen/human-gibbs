@@ -164,6 +164,10 @@ def compare_trial(trial_id, move_probability):
 
     return trial
 
+"""
+Function: run_all_trials
+Gathers all trial ids from the database and runs them all through compare_trial, saving the results out into a file.
+"""
 def run_all_trials():
     # runs all the trials and writes out all data into a json string saved to results.json
     trials = db.get_all_trials()
