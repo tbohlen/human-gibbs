@@ -305,19 +305,11 @@ l - the list to randomize
 """
 def randomize(l):
     for i in range(len(l) - 1, -1, -1):
-<<<<<<< Updated upstream
-        randIndex = floor(random.uniform(0, i+1))
+        randIndex = int(floor(random.uniform(0, i+1)))
         switchElem = l[randIndex]
         otherElem = l[i]
-        l[randInd] = otherElem
+        l[randIndex] = otherElem
         l[i] = switchElem
-=======
-        randIndex = floor(random.uniform(0, i+1));
-        switchElem = l[randIndex];
-        otherElem = l[i];
-        l[randInd] = otherElem;
-        l[i] = switchElem;
->>>>>>> Stashed changes
 
 """
 Function: decide_group
@@ -369,7 +361,7 @@ Prints out the groupings of the images
 def sort_random_set():
     # choose a set
     image_sets = db.get_all_image_sets()
-    set_id = image_sets[0]
+    set_id = image_sets[0]['_id']
     print "Sorting image set with id " + str(set_id)
 
     # partition it

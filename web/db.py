@@ -105,7 +105,7 @@ def add_image_set(dir_path, name=None):
                              'images': image_list})
 
 # takes the trial_id as a string and returns the image set        
-def get_image_set(trial_id):
+def get_image_set_by_trial_id(trial_id):
     trial = db.trials.find_one({'_id': ObjectId(trial_id)})
     return db.dereference(trial['image_set'])
 

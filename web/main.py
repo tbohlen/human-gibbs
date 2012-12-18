@@ -107,7 +107,7 @@ def images():
     trial_id = request.cookies.get('trial_id')
     
     # get the trials image set
-    image_set = db.get_image_set(trial_id)
+    image_set = db.get_image_set_by_trial_id(trial_id)
 
     image_ids = [str(image['image_id']) for image in image_set['images']]
 
