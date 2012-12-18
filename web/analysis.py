@@ -141,7 +141,7 @@ def log_likelihood(current_partition, group_num, move):
     scale = sig_sq * (1 + 1 / l)
 
     # calculate the log probability over each dimension
-    log_p = t.logpdf(image, a, loc=mu, scale=scale)
+    log_p = t.logpdf(image_matrix, a, loc=mu, scale=scale)
 
     return sum(log_p)
 
@@ -306,3 +306,29 @@ def sort_image_set(set_id):
         partition[image_id] == group
 
     return partition
+
+"""
+Function: sort_random_set
+Sorts a set in the the database. Actually just sorts the first set every time.
+Prints out the groupings of the images
+"""
+def sort_random_set():
+    # choose a set
+    image_sets = db.get_all_image_sets()
+    set_id = image_sets[0]
+    print "Sorting image set with id " + str(set_id)
+
+    # partition it
+    partition = sort_image_set(set_id)
+    print "Image set sorted"
+
+    # print the results
+    groups = groups_in_partition(partition)
+    for group in groups:
+        print "Group " + str(group) + ":"
+        group_images = images_in_group(group)
+        for image in group_images:
+            print "\t" db.get_image_file(image)
+    print "DONE"
+    
+

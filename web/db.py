@@ -189,7 +189,7 @@ def add_unstaged_trial(tester):
     # choose a random image set
     num_sets = image_sets.count()
     image_set = image_sets[randint(num_sets)]
-    
+
     # add all the images to the trial
     init_state = []
     for image in image_set['images']:
