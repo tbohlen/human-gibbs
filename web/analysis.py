@@ -113,7 +113,10 @@ domain: list of the allowed values in the domain of the discrete distribution
 Returns:
 The log_prob for the x values
 """
-def discete_trunc_t_logpdf(x, df, domain, loc=0, scale=1):
+def discrete_trunc_t_logpdf(x, df, domain, loc=0, scale=1):
+    # make sure is numpy array
+    x = array(x)
+
     # get the indices of the values we are interested in
     indices = empty(x.shape)
     for index, val in ndenumerate(x):
@@ -193,7 +196,7 @@ def log_likelihood(current_partition, group_num, image_id):
     scale = sig_sq * (1 + 1 / l)
 
     # calculate the log probability over each dimension
-    log_p = discete_trunc_t_logpdf(image_matrix, a, range(256), loc=mu, scale=scale)
+    log_p = discrete_trunc_t_logpdf(image_matrix, a, range(256), loc=mu, scale=scale)
 
     return sum(log_p)
 
