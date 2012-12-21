@@ -193,7 +193,7 @@ def log_likelihood(current_partition, group_num, image_id):
     mu = (l0 * mu0 + n * group_mean) / l
     sig_sq = (a0 * sig_sq0 + (n - 1) * group_var +
               l0 * n * (mu0 - group_mean) ** 2 / l) / a
-    scale = sig_sq * (1 + 1 / l)
+    scale = sqrt(sig_sq * (1 + 1 / l))
 
     # calculate the log probability over each dimension
     log_p = discrete_trunc_t_logpdf(image_matrix, a, range(256), loc=mu, scale=scale)
