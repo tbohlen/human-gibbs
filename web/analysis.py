@@ -16,8 +16,8 @@ a0 = 0.05 # confidence in prior variance
 
 DISPERSION_PARAMETER = 200.0
 
-walk_in = 10
-samples = 10
+walk_in = 40
+samples = 5
 
 """
 Function: get_image_matrix
@@ -397,7 +397,7 @@ def sample_disp(current_partition, image_id, group, params):
     # choose one
     prob = disp_log_prob
     if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
-        params[3] = new_disp
+        params[4] = new_disp
         prob = new_disp_log_prob
     return [params, prob]
 
