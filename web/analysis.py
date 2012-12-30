@@ -298,6 +298,29 @@ def run_all_trials():
     trials = db.get_all_trials()
     trialsData = {}
     for trial in trials:
+        trial = compare_trial(trial._id, move_probability)
+    # find a results file that does not yet exist
+    base = "./results"
+    name = base
+    number = 0
+    while os.path.exists(name + ".json"):
+        name = base + str(number)
+        number += 1
+    f = open(name + ".json")
+    json.dump(trials, f)
+    f.close()
+
+"""
+Function: run_all_trials_for_params
+Gathers all trial ids from the database and runs them all through compare_trial, saving the results out into a file. This function finds the best parameters for each move, rather than the likelihood of the human move.
+
+This method now runs each child through compare_trial with find_params_for_move, rather than move_probability.
+"""
+def run_all_trials_for_params():
+    # runs all the trials and writes out all data into a json string saved to results.json
+    trials = db.get_all_trials()
+    trialsData = {}
+    for trial in trials:
         trial = compare_trial(trial._id, find_params_for_move)
     # find a results file that does not yet exist
     base = "./results"
@@ -311,12 +334,28 @@ def run_all_trials():
     f.close()
 
 """
+Function: gibbs_prob
+takes in a move probability, move time, and new group, and returns a probability that this set of move params is 
+"""
+def gibbs_prob(group, time, prob):
+    maxVal = -inf
+    max_group = -1
+    for key, val in prob.iteritems():
+        if val > maxVal:
+            group = key
+            maxVal = val
+    if max_group != group:
+        return 0
+    else:
+        return var(prob)
+
+"""
 Gibbs Sampling Functions
 
 These functions sample the various parameters of our particle filter model for the gibbs sampler.
 """
 
-def sample_mu(current_partition, image_id, group, params):
+def sample_mu(current_partition, image_id, group, time_elapsed, params):
     #print "Sampling mu..."
     # new random mu
     new_mu = truncnorm.rvs((0.0-params[0])/10.0, (255.0-params[0])/10.0, params[0], 10.0) # pretty random...
@@ -333,7 +372,7 @@ def sample_mu(current_partition, image_id, group, params):
         prob = new_mu_log_prob
     return [params, prob]
 
-def sample_mu_conf(current_partition, image_id, group, params):
+def sample_mu_conf(current_partition, image_id, group, time_elapsed, params):
     #print "Sampling mu_conf..."
     # new random mu_conf
     new_mu_conf = truncnorm.rvs((0.0-params[1])/0.25, (1.0-params[1])/0.25, params[1], 0.25) # pretty random...
@@ -350,7 +389,7 @@ def sample_mu_conf(current_partition, image_id, group, params):
         prob = new_mu_conf_log_prob
     return [params, prob]
 
-def sample_var(current_partition, image_id, group, params):
+def sample_var(current_partition, image_id, group, time_elapsed, params):
     #print "Sampling variance..."
     # new random var
     new_var = truncnorm.rvs((0.0-params[2])/8.0, (256.0*256.0-params[2])/8.0, params[1], 8.0) # pretty random...
@@ -367,7 +406,7 @@ def sample_var(current_partition, image_id, group, params):
         prob = new_var_log_prob
     return [params, prob]
 
-def sample_var_conf(current_partition, image_id, group, params):
+def sample_var_conf(current_partition, image_id, group, time_elapsed, params):
     #print "Sampling variance conf..."
     # new random var_conf
     new_var_conf = truncnorm.rvs((0.0-params[3])/0.25, (1.0-params[3])/0.25, params[3], 0.25) # pretty random...
@@ -384,7 +423,7 @@ def sample_var_conf(current_partition, image_id, group, params):
         prob = new_var_conf_log_prob
     return params, prob
 
-def sample_disp(current_partition, image_id, group, params):
+def sample_disp(current_partition, image_id, group, time_elapsed, params):
     #print "Sampling distribution..."
     # new random disp
     new_disp = truncnorm.rvs((0.0-params[4])/4.0, (1000.0-params[4])/4.0, params[4], 4.0) # pretty random...
@@ -422,7 +461,7 @@ group - the group that the image was moved into
 Returns:
 The mean of the samples taken
 """
-def find_params_for_move(current_partition, image_id, group):
+def find_params_for_move(current_partition, move):
     # first generate a random start point
     mu = random.normal(255.0/2.0, 256.0/4.0)
     mu_conf = random.uniform(0.0, 1.0)
@@ -433,32 +472,36 @@ def find_params_for_move(current_partition, image_id, group):
     params = [mu, mu_conf, sig, var_conf, disp]
     sample_params = []
 
+    image_id = move['image_id']
+    group = move['new_group']
+    time_elapsed = move['time_elapsed']
+
     # iterate across the variables, testing each new suggestion in turn
     print "Walking in...."
     for i in range(walk_in):
         # sample mu
-        params, prob = sample_mu(current_partition, image_id, group, params)
+        params, prob = sample_mu(current_partition, image_id, group, time_elapsed, params)
         # sample mu_conf
-        params, prob = sample_mu_conf(current_partition, image_id, group, params)
+        params, prob = sample_mu_conf(current_partition, image_id, group, time_elapsed, params)
         # sample var
-        params, prob = sample_var(current_partition, image_id, group, params)
+        params, prob = sample_var(current_partition, image_id, group, time_elapsed, params)
         # sample var_conf
-        params, prob = sample_var_conf(current_partition, image_id, group, params)
+        params, prob = sample_var_conf(current_partition, image_id, group, time_elapsed, params)
         # sample disp
-        params, prob = sample_disp(current_partition, image_id, group, params)
+        params, prob = sample_disp(current_partition, image_id, group, time_elapsed, params)
 
     print "Sampling..."
     for j in range(samples):
         # sample mu
-        params, prob = sample_mu(current_partition, image_id, group, params)
+        params, prob = sample_mu(current_partition, image_id, group, time_elapsed, params)
         # sample mu_conf
-        params, prob = sample_mu_conf(current_partition, image_id, group, params)
+        params, prob = sample_mu_conf(current_partition, image_id, group, time_elapsed, params)
         # sample var
-        params, prob = sample_var(current_partition, image_id, group, params)
+        params, prob = sample_var(current_partition, image_id, group, time_elapsed, params)
         # sample var_conf
-        params, prob = sample_var_conf(current_partition, image_id, group, params)
+        params, prob = sample_var_conf(current_partition, image_id, group, time_elapsed, params)
         # sample disp
-        params, prob = sample_disp(current_partition, image_id, group, params)
+        params, prob = sample_disp(current_partition, image_id, group, time_elapsed, params)
         print "New sample: " + str(params)
 
         # save the sample we just generated
@@ -498,7 +541,6 @@ The group to add the image to.
 def decide_group(partition, image_id):
     probabilities = move_probability(partition, image_id)
     print 'Probabilities:', probabilities
-    sorted_probabilities = sorted(probabilities.iteritems(), key=operator.itemgetter(1))
     maxVal = -inf
     group = -1
     for key, val in probabilities.iteritems():
