@@ -622,7 +622,6 @@ def sort_and_print_set(set_id=None):
             print "\t" + fileName
             f.write("\t" + fileName + "\n")
             i += 1
-
     print "DONE"
     f.write("DONE\n")
     f.close()
