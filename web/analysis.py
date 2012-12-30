@@ -3,17 +3,21 @@ import imageGen
 import json
 import operator
 import os
+import time
 from PIL import Image
-from math import floor
+from math import floor, exp
 from numpy import *
-from scipy.stats import t
+from scipy.stats import t, truncnorm
 
 mu0 = 255.0 / 2.0 # prior mean
 l0 = 0.05 # confidence in prior mean
 sig_sq0 = (256.0 / 4.0)**2 # prior variance
 a0 = 0.05 # confidence in prior variance
 
-DISPERSION_PARAMETER = 10.0
+DISPERSION_PARAMETER = 200.0
+
+walk_in = 40
+samples = 5
 
 """
 Function: get_image_matrix
@@ -88,13 +92,13 @@ group - the group that the new object is being added to
 Returns:
 The probability of the new partition given the old
 """
-def log_prior(oldPartition, group):
+def log_prior(oldPartition, group, dispersion):
     i = len(oldPartition)
     num_in_group = len(images_in_group(oldPartition, group)) + 1
-    denominator = i - 1.0 + DISPERSION_PARAMETER
+    denominator = i - 1.0 + dispersion
     if num_in_group == 1:
         # this is the only image in this group
-        return log(DISPERSION_PARAMETER / denominator)
+        return log(dispersion / denominator)
     else:
         return log(num_in_group / denominator)
 
@@ -124,7 +128,7 @@ def discrete_trunc_t_logpdf(x, df, domain, loc=0, scale=1):
 
     # number of elements in domain
     n = len(domain)
-    
+
     # the shape for each of the values in the domain
     shape = (n,) + x.shape
 
@@ -147,8 +151,7 @@ def discrete_trunc_t_logpdf(x, df, domain, loc=0, scale=1):
         log_prob[i] = norm_log_prob[(index,)+i]
 
     return log_prob
-        
-    
+
 """
 Function: log_likelihood
 
@@ -160,7 +163,7 @@ current_partition - the current partitioning of the other images
 group_num - the group that the current image would be assigned to
 move - the move dict holding the information about the current move
 """
-def log_likelihood(current_partition, group_num, image_id):
+def log_likelihood(current_partition, group_num, image_id, prior_mean, mean_conf, prior_var, var_conf):
     # the images grouped so far
     images = images_in_group(current_partition, group_num)
 
@@ -188,14 +191,15 @@ def log_likelihood(current_partition, group_num, image_id):
         group_var = 0
 
     # calculate the parameters of the student_t distribution
-    l = l0 + n
-    a = a0 + n
-    mu = (l0 * mu0 + n * group_mean) / l
-    sig_sq = (a0 * sig_sq0 + (n - 1) * group_var +
-              l0 * n * (mu0 - group_mean) ** 2 / l) / a
-    scale = sqrt(sig_sq * (1 + 1 / l))
+    l = mean_conf + n
+    a = var_conf + n
+    mu = (mean_conf * prior_mean + n * group_mean) / l
+    sig_sq = (var_conf * prior_var + (n - 1) * group_var +
+              mean_conf * n * (prior_mean - group_mean) ** 2 / l) / a
+    scale = sig_sq * (1 + 1 / l)
 
     # calculate the log probability over each dimension
+    # from timing this takes about 0.09 sec
     log_p = discrete_trunc_t_logpdf(image_matrix, a, range(256), loc=mu, scale=scale)
 
     return sum(log_p)
@@ -216,7 +220,7 @@ image_id - the id of the image being added to the partition
 Returns:
 The probability of the move
 """
-def move_probability(current_partition, image_id, newGroup=None):
+def move_probability(current_partition, image_id, newGroup=None, prior_mean=mu0, mean_conf=l0, prior_var=sig_sq0, var_conf=a0, dispersion=DISPERSION_PARAMETER):
     moveProbabilities = {}
     groups = groups_in_partition(current_partition)
     if newGroup != None and newGroup not in groups:
@@ -232,8 +236,8 @@ def move_probability(current_partition, image_id, newGroup=None):
     # for each of the groups in groups, calculate the probability of that one being selected
     for group in groups:
         # the probability of a given move is the likelihood times the prior given the move that happened and all prior data
-        likelihood = log_likelihood(current_partition, group, image_id)
-        prior = log_prior(current_partition, group)
+        likelihood = log_likelihood(current_partition, group, image_id, prior_mean, mean_conf, prior_var, var_conf)
+        prior = log_prior(current_partition, group, dispersion)
         moveProbabilities[group] = likelihood + prior
 
     # normalize all the probabilities properly
@@ -272,10 +276,10 @@ def compare_trial(trial_id, move_probability):
     # iterate over each move in the trial
     for move in trial['moves']:
         # calculate the normalized log probability of each potential move according to the particle filter
-        probs = move_probability(current_partition, move['image_id'], move['group'])
+        probs = move_probability(current_partition, move['image_id'], move['new_group'])
 
         # augment the move object
-        move['move_probs'] = probs
+        move['move_results'] = probs
         move['partition'] = copy(current_partition)
 
         # update the current partition
@@ -286,13 +290,15 @@ def compare_trial(trial_id, move_probability):
 """
 Function: run_all_trials
 Gathers all trial ids from the database and runs them all through compare_trial, saving the results out into a file.
+
+This method now runs each child through compare_trial with find_params_for_move, rather than move_probability.
 """
 def run_all_trials():
     # runs all the trials and writes out all data into a json string saved to results.json
     trials = db.get_all_trials()
     trialsData = {}
     for trial in trials:
-        trial = compare_trial(trial._id, move_probability)
+        trial = compare_trial(trial._id, find_params_for_move)
     # find a results file that does not yet exist
     base = "./results"
     name = base
@@ -303,6 +309,165 @@ def run_all_trials():
     f = open(name + ".json")
     json.dump(trials, f)
     f.close()
+
+"""
+Gibbs Sampling Functions
+
+These functions sample the various parameters of our particle filter model for the gibbs sampler.
+"""
+
+def sample_mu(current_partition, image_id, group, params):
+    #print "Sampling mu..."
+    # new random mu
+    new_mu = truncnorm.rvs((0.0-params[0])/10.0, (255.0-params[0])/10.0, params[0], 10.0) # pretty random...
+    #print "original is " + str(params[0])
+    #print "new is " + str(new_mu)
+    # sample both probs
+    mu_log_prob = move_probability(current_partition, image_id, group, params[0], params[1], params[2], params[3], params[4])[group]
+    new_mu_log_prob = move_probability(current_partition, image_id, group, new_mu, params[1], params[2], params[3], params[4])[group]
+    diff = exp(new_mu_log_prob - mu_log_prob)
+    # choose one
+    prob = mu_log_prob
+    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+        params[0] = new_mu
+        prob = new_mu_log_prob
+    return [params, prob]
+
+def sample_mu_conf(current_partition, image_id, group, params):
+    #print "Sampling mu_conf..."
+    # new random mu_conf
+    new_mu_conf = truncnorm.rvs((0.0-params[1])/0.25, (1.0-params[1])/0.25, params[1], 0.25) # pretty random...
+    #print "original is " + str(params[1])
+    #print "new is " + str(new_mu_conf)
+    # sample both probs
+    mu_conf_log_prob = move_probability(current_partition, image_id, group, params[0], params[1], params[2], params[3], params[4])[group]
+    new_mu_conf_log_prob = move_probability(current_partition, image_id, group, params[0], new_mu_conf, params[2], params[3], params[4])[group]
+    diff = exp(new_mu_conf_log_prob - mu_conf_log_prob)
+    # choose one
+    prob = mu_conf_log_prob
+    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+        params[1] = new_mu_conf
+        prob = new_mu_conf_log_prob
+    return [params, prob]
+
+def sample_var(current_partition, image_id, group, params):
+    #print "Sampling variance..."
+    # new random var
+    new_var = truncnorm.rvs((0.0-params[2])/8.0, (256.0*256.0-params[2])/8.0, params[1], 8.0) # pretty random...
+    #print "original is " + str(params[2])
+    #print "new is " + str(new_var)
+    # sample both probs
+    var_log_prob = move_probability(current_partition, image_id, group, params[0], params[1], params[2], params[3], params[4])[group]
+    new_var_log_prob = move_probability(current_partition, image_id, group, params[0], params[1], new_var, params[3], params[4])[group]
+    diff = exp(new_var_log_prob - var_log_prob)
+    # choose one
+    prob = var_log_prob
+    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+        params[2] = new_var
+        prob = new_var_log_prob
+    return [params, prob]
+
+def sample_var_conf(current_partition, image_id, group, params):
+    #print "Sampling variance conf..."
+    # new random var_conf
+    new_var_conf = truncnorm.rvs((0.0-params[3])/0.25, (1.0-params[3])/0.25, params[3], 0.25) # pretty random...
+    #print "original is " + str(params[3])
+    #print "new is " + str(new_var_conf)
+    # sample both probs
+    var_conf_log_prob = move_probability(current_partition, image_id, group, params[0], params[1], params[2], params[3], params[4])[group]
+    new_var_conf_log_prob = move_probability(current_partition, image_id, group, params[0], params[1], params[2], new_var_conf, params[4])[group]
+    diff = exp(new_var_conf_log_prob - var_conf_log_prob)
+    # choose one
+    prob = var_conf_log_prob
+    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+        params[3] = new_var_conf
+        prob = new_var_conf_log_prob
+    return params, prob
+
+def sample_disp(current_partition, image_id, group, params):
+    #print "Sampling distribution..."
+    # new random disp
+    new_disp = truncnorm.rvs((0.0-params[4])/4.0, (1000.0-params[4])/4.0, params[4], 4.0) # pretty random...
+    #print "original is " + str(params[4])
+    #print "new is " + str(new_disp)
+    # sample both probs
+    disp_log_prob = move_probability(current_partition, image_id, group, params[0], params[1], params[2], params[3], params[4])[group]
+    new_disp_log_prob = move_probability(current_partition, image_id, group, params[0], params[1], params[2], params[3], new_disp)[group]
+    diff = exp(new_disp_log_prob - disp_log_prob)
+    # choose one
+    prob = disp_log_prob
+    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+        params[4] = new_disp
+        prob = new_disp_log_prob
+    return [params, prob]
+
+"""
+Function: find_params_for_move
+Runs gibbs over the variables in our particle filter, attempting to find the ideal parameters for a given human move.d
+
+Variables to Sample:
+mu - mean - >= 0, <= 255
+mu_conf - confidence in prior mean -
+var - variance - >= 0, <=
+var_conf - confidence in prior variance - 
+dispersion - dispersion parameter to dirichlet - > 0
+
+All moves are made via a random sample from a normal distribution
+
+Parameters:
+current_partition - the current partition of the images into groups
+image_id - the id of the image that is being moved
+group - the group that the image was moved into
+
+Returns:
+The mean of the samples taken
+"""
+def find_params_for_move(current_partition, image_id, group):
+    # first generate a random start point
+    mu = random.normal(255.0/2.0, 256.0/4.0)
+    mu_conf = random.uniform(0.0, 1.0)
+    sig = random.normal((255.0/4.0) ** 0.5, ((255.0/4.0) ** 0.5)/8.0) # pretty arbitrary normal dist params
+    var_conf = random.uniform(0.0, 1.0)
+    disp = random.normal(50.0, 25.0) # another pretty arbitrary distribution
+
+    params = [mu, mu_conf, sig, var_conf, disp]
+    sample_params = []
+
+    # iterate across the variables, testing each new suggestion in turn
+    print "Walking in...."
+    for i in range(walk_in):
+        # sample mu
+        params, prob = sample_mu(current_partition, image_id, group, params)
+        # sample mu_conf
+        params, prob = sample_mu_conf(current_partition, image_id, group, params)
+        # sample var
+        params, prob = sample_var(current_partition, image_id, group, params)
+        # sample var_conf
+        params, prob = sample_var_conf(current_partition, image_id, group, params)
+        # sample disp
+        params, prob = sample_disp(current_partition, image_id, group, params)
+
+    print "Sampling..."
+    for j in range(samples):
+        # sample mu
+        params, prob = sample_mu(current_partition, image_id, group, params)
+        # sample mu_conf
+        params, prob = sample_mu_conf(current_partition, image_id, group, params)
+        # sample var
+        params, prob = sample_var(current_partition, image_id, group, params)
+        # sample var_conf
+        params, prob = sample_var_conf(current_partition, image_id, group, params)
+        # sample disp
+        params, prob = sample_disp(current_partition, image_id, group, params)
+        print "New sample: " + str(params)
+
+        # save the sample we just generated
+        sample_params.append(params[:])
+
+    print "Move of image " + str(image_id) + " to group " + str(group) + " found params: " + str(params)
+    print "Resulting probability is " + str(move_probability(current_partition, image_id, group, params[0], params[1], params[2], params[3], params[4]))
+    print "mean is " + str(mean(array(sample_params), axis=0))
+    return mean(array(sample_params), axis=0)
 
 """
 Function: randomize
