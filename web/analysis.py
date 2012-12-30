@@ -10,11 +10,11 @@ from numpy import *
 from scipy.stats import t, truncnorm
 
 mu0 = 255.0 / 2.0 # prior mean
-l0 = 90 # confidence in prior mean
+l0 = 1 # confidence in prior mean
 sig_sq0 = (256.0 / 4.0)**2 # prior variance
-a0 = 90 # confidence in prior variance
+a0 = 5 # confidence in prior variance
 
-DISPERSION_PARAMETER = 50.0
+DISPERSION_PARAMETER = 10.0
 
 walk_in = 40
 samples = 5
@@ -246,7 +246,8 @@ def move_probability(current_partition, move, prior_mean=mu0, mean_conf=l0, prio
     for key, val in moveProbabilities.iteritems():
         moveProbabilities[key] = val - total
 
-
+    print "group is ", newGroup
+    print "Move probs are: ", moveProbabilities
     return moveProbabilities
 
 """
@@ -418,7 +419,7 @@ def sample_mu(current_partition, move, time_elapsed, params):
 def sample_mu_conf(current_partition, move, time_elapsed, params):
     group = move['new_group'];
     # new random mu_conf
-    new_mu_conf = truncnorm.rvs((-500.0-params[1])/4.0, (500.0-params[1])/4.0, params[1], 4.0) # pretty random...
+    new_mu_conf = truncnorm.rvs((0.0-params[1])/4.0, (500.0-params[1])/4.0, params[1], 4.0) # pretty random...
     # sample both probs
     mu_conf_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], params[3], params[4])[group]
     new_mu_conf_log_prob = move_probability(current_partition, move, params[0], new_mu_conf, params[2], params[3], params[4])[group]
@@ -448,7 +449,7 @@ def sample_var(current_partition, move, time_elapsed, params):
 def sample_var_conf(current_partition, move, time_elapsed, params):
     group = move['new_group'];
     # new random var_conf
-    new_var_conf = truncnorm.rvs((-500.0-params[3])/4.0, (500.0-params[3])/4.0, params[3], 4.0) # pretty random...
+    new_var_conf = truncnorm.rvs((0.0-params[3])/4.0, (500.0-params[3])/4.0, params[3], 4.0) # pretty random...
     # sample both probs
     var_conf_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], params[3], params[4])[group]
     new_var_conf_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], new_var_conf, params[4])[group]
@@ -588,8 +589,8 @@ image_id - the id of the image that is going to be added
 Returns:
 The group to add the image to.
 """
-def decide_group(partition, image_id):
-    probabilities = move_probability(partition, image_id)
+def decide_group(partition, move):
+    probabilities = move_probability(partition, move)
     print 'Probabilities:', probabilities
     maxVal = -inf
     group = -1
@@ -621,7 +622,8 @@ def sort_image_set(set_id):
     probs = {}
     for image in images:
         image_id = str(image['image_id'])
-        probs, group = decide_group(partition, image_id)
+        move = {'image_id':image_id, 'new_group':None};
+        probs, group = decide_group(partition, move)
         print "Adding image to group " + str(group)
         partition[image_id] = group
         probs[image_id] = probs
