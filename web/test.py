@@ -64,10 +64,10 @@ class TestLogLikelihood(unittest.TestCase):
         self.light_grey_id = 'light_grey'
         self.dark_grey_image = ones((2,2)) * 63
         self.dark_grey_id = 'dark_grey'
-        self.mostly_black_image = self.black_image
+        self.mostly_black_image = self.black_image.copy()
         self.mostly_black_image[0,0] = 255
         self.mostly_black_id = 'mostly_black'
-        self.mostly_white_image = self.white_image
+        self.mostly_white_image = self.white_image.copy()
         self.mostly_white_image[0,0] = 0
         self.mostly_white_id = 'mostly_white'
         analysis.image_matrices[self.black_id] = self.black_image
@@ -85,13 +85,9 @@ class TestLogLikelihood(unittest.TestCase):
 
         # create a mixed partition
         self.mixed_partition = {self.black_id: self.black_group,
-                                self.black_id: self.black_group,
-                                self.white_id: self.black_group,
                                 self.mostly_black_id: self.black_group,
                                 self.dark_grey_id: self.black_group,
                                 self.white_id: self.white_group,
-                                self.white_id: self.white_group,
-                                self.black_id: self.white_group,                               
                                 self.mostly_white_id: self.white_group,
                                 self.light_grey_id: self.white_group}
 
@@ -163,8 +159,8 @@ class TestLogLikelihood(unittest.TestCase):
                                                  self.black_group,
                                                  self.white_id)
 
-#        assert_approx_equal(black_to_black, white_to_white)
-#        assert_approx_equal(black_to_white, white_to_black)
+        assert_approx_equal(black_to_black, white_to_white)
+        assert_approx_equal(black_to_white, white_to_black)
         self.assertTrue(black_to_black > black_to_white)
 
     def test_grey_images_mixed(self):
@@ -181,8 +177,8 @@ class TestLogLikelihood(unittest.TestCase):
                                                      self.black_group,
                                                      self.dark_grey_id)
 
-#        assert_approx_equal(light_grey_to_black, dark_grey_to_white, significant=5)
-#        assert_approx_equal(light_grey_to_white, dark_grey_to_black, significant=5)
+        assert_approx_equal(light_grey_to_black, dark_grey_to_white, significant=5)
+        assert_approx_equal(light_grey_to_white, dark_grey_to_black, significant=5)
         self.assertTrue(light_grey_to_white > light_grey_to_black)
 
     def test_mostly_mixed(self):
@@ -199,8 +195,8 @@ class TestLogLikelihood(unittest.TestCase):
                                                         self.black_group,
                                                         self.mostly_white_id)
 
-#        assert_approx_equal(mostly_black_to_black, mostly_white_to_white)
-#        assert_approx_equal(mostly_black_to_white, mostly_white_to_black)
+        assert_approx_equal(mostly_black_to_black, mostly_white_to_white)
+        assert_approx_equal(mostly_black_to_white, mostly_white_to_black)
         self.assertTrue(mostly_black_to_black > mostly_black_to_white)
 
         
