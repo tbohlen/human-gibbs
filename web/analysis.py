@@ -14,7 +14,7 @@ l0 = 90 # confidence in prior mean
 sig_sq0 = (256.0 / 4.0)**2 # prior variance
 a0 = 90 # confidence in prior variance
 
-DISPERSION_PARAMETER = 100.0
+DISPERSION_PARAMETER = 50.0
 
 walk_in = 40
 samples = 5
@@ -163,7 +163,7 @@ current_partition - the current partitioning of the other images
 group_num - the group that the current image would be assigned to
 move - the move dict holding the information about the current move
 """
-def log_likelihood(current_partition, group_num, image_id, prior_mean, mean_conf, prior_var, var_conf):
+def log_likelihood(current_partition, group_num, image_id, prior_mean=mu0, mean_conf=l0, prior_var=sig_sq0, var_conf=a0):
     # the images grouped so far
     images = images_in_group(current_partition, group_num)
 
@@ -290,9 +290,9 @@ def compare_trial(trial_id, move_probability):
             move['likelihood'] = probs[move['new_group']];
             print "\tFound likelihood:", move['likelihood'];
         else:
-            move['move_results'] = {}
+            move['move_results'] = {0:0.0}
             move['partition'] = copy(current_partition)
-            move['likelihood'] = 1.0;
+            move['likelihood'] = 0.0;
 
         # update the current partition
         current_partition[move['image_id']] = move['new_group']
