@@ -10,11 +10,11 @@ from numpy import *
 from scipy.stats import t, truncnorm
 
 mu0 = 255.0 / 2.0 # prior mean
-l0 = 1 # confidence in prior mean
+l0 = 0.01 # confidence in prior mean
 sig_sq0 = (256.0 / 4.0)**2 # prior variance
-a0 = 5 # confidence in prior variance
+a0 = 0.05 # confidence in prior variance
 
-DISPERSION_PARAMETER = 10.0
+DISPERSION_PARAMETER = 10
 
 walk_in = 40
 samples = 5
@@ -196,7 +196,7 @@ def log_likelihood(current_partition, group_num, image_id, prior_mean=mu0, mean_
     mu = (mean_conf * prior_mean + n * group_mean) / l
     sig_sq = (var_conf * prior_var + (n - 1) * group_var +
               mean_conf * n * (prior_mean - group_mean) ** 2 / l) / a
-    scale = sig_sq * (1 + 1 / l)
+    scale = sqrt(sig_sq * (1 + 1 / l))
 
     # calculate the log probability over each dimension
     # from timing this takes about 0.09 sec
