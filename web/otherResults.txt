@@ -1,0 +1,7 @@
+mean is -2.17568247224
+median is -2.30988356025
+
+Parameters were:
+mean-conf: 80
+var-conf: 80
+dispersion: 50
