@@ -213,6 +213,17 @@ def get_all_trials():
 
     return trials
 
+# returns all mechanical turk runs with 40 moves
+def get_all_turk_trials():
+    # return all the trials in the database
+    trials_cursor = db.trials.find({"moves": {"$size":40}, "tester":"Mechanical Turker"})
+    trials = []
+
+    for i in range(trials_cursor.count()):
+        trials.append(trials_cursor[i])
+
+    return trials
+
 ### Adding moves ###
 
 # add a move to a trial. Takes the trial ID as a string
