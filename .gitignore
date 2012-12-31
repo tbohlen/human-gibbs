@@ -2,3 +2,9 @@
 *.swp
 *.swo
 venv
+paper/auto
+web/sort*
+*.bbl
+*.blg
+*.aux
+*.out
