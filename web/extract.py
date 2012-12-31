@@ -1,5 +1,6 @@
 import re
 import json
+import os
 
 # extracting the data from the printe results of a run_all_trials.
 # This is necessary because I screwed up and the json serialization failed!
@@ -30,12 +31,18 @@ def extract(fName):
             data[currentTrial].append(float(likelihoodMatch.group(1)));
 
     f.close()
-    resultsFName = "parsedResults.json"
-    resultsF = open(resultsFName, 'w')
+    base = "parsed-results"
+    name = base
+    number = 0
+    while os.path.exists(name + ".json"):
+        name = base + str(number)
+        number += 1
+    print "Saving parsed results in", name, ".json"
+    resultsFile = open(name + ".json", 'w')
     print "Dumping into file..."
-    json.dump(data, resultsF)
+    json.dump(data, resultsFile)
     print "Done."
-    resultsF.close()
+    resultsFile.close()
 
 
 
