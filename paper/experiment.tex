@@ -1,21 +1,31 @@
 \section*{Experimental Design}
+The task that trial subjects were faced with was designed to facilitate
+comparison between the subjects' decisions those that would be made by a
+Bayesian algorithm. Modeling a sequential online categorization was useful both
+because that was the type of categorization algorithm developed in previous
+work, and because it had a straightforward manifestation in a constrained human
+task. Trial subjects were presented with stimuli images, sequentially, and asked
+to sort each image as it appeared into a group. Once the image was placed in a
+group, the subject was not allowed to switch the image to another group.  The
+instructions given to each subject can be viewed in the Appendix, Figure
+\ref{fig:instructions}. 
 
-Describe how experiment chosen: balancing between a task natural for a person
-and a task natural for a categorization algorithm in order to facilitate the
-comparison.
+The stimuli used were 10-by-10 pixelated images. Each pixel-block in the image
+was a colored between white and black, with 256 possible grayscale values. These
+type of images were chosen to both make the task difficult for the human subject and
+to make the input data directly interpretable for the inference algorithm.
+Figure \ref{fig:clusterer} shows a mostly completed trial.
 
-Mechanical Turk users were subject of experiment; all movements of the images
-were logged and stored for analysis.
+Workers on Mechanical Turk were hired to be trial subjects. They were presented
+with a website to conduct the trial on: each worker was first shown the
+instruction page in Figure \ref{fig:instructions}, and then were brought to the
+page on which the trial was conducted, show in Figure \ref{fig:clusterer}  All
+the actions performed by the subject were collected in a database to be used for
+later analysis.
 
 \begin{figure}
-\includegraphics[width=6in]{img/instructions.png}
-\label{fig:instructions}
-\caption{The instructions presented to the Mechanical Turk worker before
-  starting trial.}
-\end{figure}
-
-\begin{figure}
-\includegraphics[width=6in]{img/clusterer.png}
+\centering
+\includegraphics[width=5.6in]{img/clusterer.png}
 \label{fig:clusterer}
 \caption{Interface through which a trial was completed. Images are dragged from
   the 'Next Image' box into one of the groups. Once an image was placed in a

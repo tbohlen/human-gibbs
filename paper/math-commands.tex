@@ -1,0 +1,25 @@
+% Useful math packages
+\usepackage{amsmath}
+
+% Write vectors as bold instead of with a little arrow
+\let\oldhat\hat
+\renewcommand{\vec}[1]{\mathbf{#1}}
+\renewcommand{\hat}[1]{\oldhat{\mathbf{#1}}}
+
+% Define command for a column vector
+\newcount\colveccount
+\newcommand*\colvec[1]{
+  \global\colveccount#1
+  \begin{pmatrix}
+    \colvecnext
+  }
+  \def\colvecnext#1{
+    #1
+    \global\advance\colveccount-1
+    \ifnum\colveccount>0
+    \\
+    \expandafter\colvecnext
+    \else
+  \end{pmatrix}
+  \fi
+}
