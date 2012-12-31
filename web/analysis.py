@@ -411,25 +411,32 @@ def sample_mu(current_partition, move, time_elapsed, params):
     diff = exp(new_mu_log_prob - mu_log_prob)
     # choose one
     prob = mu_log_prob
-    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+    if diff > 0.0 or random.uniform(0.0, 1.0) <= exp(diff):
         params[0] = new_mu
         prob = new_mu_log_prob
     return [params, prob]
 
-def sample_mu_conf(current_partition, move, time_elapsed, params):
+def sample_mu_conf(current_partition, move, time_elapsed, params, last_probs):
     group = move['new_group'];
     # new random mu_conf
     new_mu_conf = truncnorm.rvs((0.0-params[1])/4.0, (500.0-params[1])/4.0, params[1], 4.0) # pretty random...
     # sample both probs
-    mu_conf_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], params[3], params[4])[group]
-    new_mu_conf_log_prob = move_probability(current_partition, move, params[0], new_mu_conf, params[2], params[3], params[4])[group]
-    diff = exp(new_mu_conf_log_prob - mu_conf_log_prob)
+
+    all_new_mu_conf_log_prob = move_probability(current_partition, move, params[0], new_mu_conf, params[2], params[3], params[4])
+    mu_conf_log_prob = last_probs[group]
+    new_mu_conf_log_prob = all_new_mu_conf_log_prob[group]
+
     # choose one
+    diff = new_mu_conf_log_prob - mu_conf_log_prob
     prob = mu_conf_log_prob
-    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+    all_probs = last_probs
+    rand = random.uniform(0.0, 1.0)
+    if diff > 0.0 or rand <= exp(diff):
+        print "picking", new_mu_conf_log_prob, "over", mu_conf_log_prob, "with diff", diff, "and rand", rand
+        all_probs = all_new_mu_conf_log_prob
         params[1] = new_mu_conf
         prob = new_mu_conf_log_prob
-    return [params, prob]
+    return [params, prob, all_probs]
 
 def sample_var(current_partition, move, time_elapsed, params):
     group = move['new_group'];
@@ -438,54 +445,66 @@ def sample_var(current_partition, move, time_elapsed, params):
     # sample both probs
     var_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], params[3], params[4])[group]
     new_var_log_prob = move_probability(current_partition, move, params[0], params[1], new_var, params[3], params[4])[group]
-    diff = exp(new_var_log_prob - var_log_prob)
+    diff = new_var_log_prob - var_log_prob
     # choose one
     prob = var_log_prob
-    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+    if diff > 0.0 or random.uniform(0.0, 1.0) <= exp(diff):
         params[2] = new_var
         prob = new_var_log_prob
     return [params, prob]
 
-def sample_var_conf(current_partition, move, time_elapsed, params):
+def sample_var_conf(current_partition, move, time_elapsed, params, last_probs):
     group = move['new_group'];
     # new random var_conf
     new_var_conf = truncnorm.rvs((0.0-params[3])/4.0, (500.0-params[3])/4.0, params[3], 4.0) # pretty random...
+
     # sample both probs
-    var_conf_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], params[3], params[4])[group]
-    new_var_conf_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], new_var_conf, params[4])[group]
-    diff = exp(new_var_conf_log_prob - var_conf_log_prob)
+    all_new_var_conf_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], new_var_conf, params[4])
+    var_conf_log_prob = last_probs[group]
+    new_var_conf_log_prob = all_new_var_conf_log_prob[group]
+
     # choose one
+    diff = new_var_conf_log_prob - var_conf_log_prob
     prob = var_conf_log_prob
-    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+    all_probs = last_probs
+    rand = random.uniform(0.0, 1.0)
+    if diff > 0.0 or rand <= exp(diff):
+        print "picking", new_var_conf_log_prob, "over", var_conf_log_prob, "with diff", diff, "and rand", rand
+        all_probs = all_new_var_conf_log_prob
         params[3] = new_var_conf
         prob = new_var_conf_log_prob
-    return params, prob
+    return params, prob, all_probs
 
-def sample_disp(current_partition, move, time_elapsed, params):
+def sample_disp(current_partition, move, time_elapsed, params, last_probs):
     group = move['new_group'];
     # new random disp
     new_disp = truncnorm.rvs((0.0-params[4])/4.0, (1000.0-params[4])/4.0, params[4], 4.0) # pretty random...
-    # sample both probs
-    disp_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], params[3], params[4])[group]
-    new_disp_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], params[3], new_disp)[group]
-    diff = exp(new_disp_log_prob - disp_log_prob)
+
+    # sample the new probabailities
+    all_new_disp_log_prob = move_probability(current_partition, move, params[0], params[1], params[2], params[3], new_disp)
+    disp_log_prob = last_probs[group]
+    new_disp_log_prob = all_new_disp_log_prob[group]
+
     # choose one
+    diff = new_disp_log_prob - disp_log_prob
     prob = disp_log_prob
-    if diff >= 1.0 or random.uniform(0.0, 1.0) <= diff:
+    all_probs = last_probs
+    if diff > 0.0 or random.uniform(0.0, 1.0) <= exp(diff):
+        all_probs = all_new_disp_log_prob
         params[4] = new_disp
         prob = new_disp_log_prob
-    return [params, prob]
+    return [params, prob, all_probs]
 
 """
 Function: find_params_for_move
 Runs gibbs over the variables in our particle filter, attempting to find the ideal parameters for a given human move.d
 
 Variables to Sample:
-mu - mean - >= 0, <= 255
 mu_conf - confidence in prior mean -
-var - variance - >= 0, <=
 var_conf - confidence in prior variance - 
 dispersion - dispersion parameter to dirichlet - > 0
+
+The mean and variance are fixed, forcing the program to optimize the confidences.
 
 All moves are made via a random sample from a normal distribution
 
@@ -498,65 +517,48 @@ The mean of the samples taken
 """
 def find_params_for_move(current_partition, move):
     # first generate a random start point
-    mu = random.normal(255.0/2.0, 256.0/4.0)
-    mu_conf = random.uniform(0.0, 100.0)
-    sig = random.normal((255.0/4.0) ** 0.5, ((255.0/4.0) ** 0.5)/8.0) # pretty arbitrary normal dist params
-    var_conf = random.uniform(0.0, 100.0)
-    disp = random.normal(50.0, 25.0) # another pretty arbitrary distribution
+    print "GROUP IS ", move['new_group']
+    mu = 255.0/2.0
+    mu_conf = 0.5
+    sig = (256.0/4.0) ** 2
+    var_conf = 10.0
+    disp = 3.0
 
     params = [mu, mu_conf, sig, var_conf, disp]
     sample_params = []
 
-    image_id = move['image_id']
-    group = move['new_group']
-    time_elapsed = move['time_elapsed']
     print "Starting with sample:", str(params)
 
+    all_probs = move_probability(current_partition, move, params[0], params[1], params[2], params[3], params[4])
+    time_elapsed = move['time_elapsed']
     # iterate across the variables, testing each new suggestion in turn
     print "Walking in...."
     for i in range(walk_in):
-        # sample mu
-        params, prob = sample_mu(current_partition, move, time_elapsed, params)
-        print("4")
-        print "\tresulting prob:", str(prob)
         # sample mu_conf
-        params, prob = sample_mu_conf(current_partition, move, time_elapsed, params)
-        print("3")
-        print "\tresulting prob:", str(prob)
-        # sample var
-        params, prob = sample_var(current_partition, move, time_elapsed, params)
-        print("2")
-        print "\tresulting prob:", str(prob)
+        params, prob, all_probs = sample_mu_conf(current_partition, move, time_elapsed, params, all_probs)
         # sample var_conf
-        params, prob = sample_var_conf(current_partition, move, time_elapsed, params)
-        print("1")
-        print "\tresulting prob:", str(prob)
+        params, prob, all_probs = sample_var_conf(current_partition, move, time_elapsed, params, all_probs)
         # sample disp
-        params, prob = sample_disp(current_partition, move, time_elapsed, params)
-        print "\tWalk in sample:", str(params)
-        print "\tresulting prob:", str(prob)
+        params, prob, all_probs = sample_disp(current_partition, move, time_elapsed, params, all_probs)
+        print "Walk in sample", i, ":", str(params)
+        print "resulting prob:", str(prob)
 
     print "Sampling..."
     for j in range(samples):
-        # sample mu
-        params, prob = sample_mu(current_partition, move, time_elapsed, params)
-        print("4")
         # sample mu_conf
-        params, prob = sample_mu_conf(current_partition, move, time_elapsed, params)
-        print("3")
-        # sample var
-        params, prob = sample_var(current_partition, move, time_elapsed, params)
-        print("2")
+        params, prob, all_probs = sample_mu_conf(current_partition, move, time_elapsed, params, all_probs)
         # sample var_conf
-        params, prob = sample_var_conf(current_partition, move, time_elapsed, params)
-        print("1")
+        params, prob, all_probs = sample_var_conf(current_partition, move, time_elapsed, params, all_probs)
         # sample disp
-        params, prob = sample_disp(current_partition, move, time_elapsed, params)
-        print "\tNew sample:", str(params)
-        print "\tresulting prob:", str(prob)
+        params, prob, all_probs = sample_disp(current_partition, move, time_elapsed, params, all_probs)
+        print "Sample", i, ":", str(params)
+        print "Resulting probability:", str(prob)
 
         # save the sample we just generated
         sample_params.append(params[:])
+
+    image_id = move['image_id']
+    group = move['new_group']
 
     print "Move of image " + str(image_id) + " to group " + str(group) + " found params: " + str(params)
     print "Resulting probability is " + str(move_probability(current_partition, move, params[0], params[1], params[2], params[3], params[4]))
