@@ -10,11 +10,11 @@ from numpy import *
 from scipy.stats import t, truncnorm
 
 mu0 = 255.0 / 2.0 # prior mean
-l0 = 0.01 # confidence in prior mean
-sig_sq0 = (256.0 / 4.0)**2 # prior variance
-a0 = 0.05 # confidence in prior variance
+l0 = 0.5 # confidence in prior mean
+sig_sq0 = (256.0 / 8.0)**2 # prior variance
+a0 = 2.0 # confidence in prior variance
 
-DISPERSION_PARAMETER = 10
+DISPERSION_PARAMETER = 30.0
 
 walk_in = 40
 samples = 5
@@ -275,26 +275,27 @@ def compare_trial(trial_id, move_probability):
         image_id = str(image['_id'])
         current_partition[image_id] = image['group']
 
-    moveNum = 0
+    moveNum = -1
     totalMoveNum = len(trial['moves']);
     # iterate over each move in the trial
     for move in trial['moves']:
         moveNum += 1
+        print "\tRunning move", moveNum, "of", totalMoveNum
+
         # calculate the normalized log probability of each potential move according to the particle filter
-        if moveNum > 1:
-            print "\tRunning move", moveNum, "of", totalMoveNum
+        if moveNum > 0:
             probs = move_probability(current_partition, move)
 
             # augment the move object
             move['move_results'] = probs
             move['partition'] = copy(current_partition)
             move['likelihood'] = probs[move['new_group']];
-            print "\tFound likelihood:", move['likelihood'];
         else:
             move['move_results'] = {0:0.0}
             move['partition'] = copy(current_partition)
             move['likelihood'] = 0.0;
 
+        print "\tFound likelihood:", move['likelihood'];
         # update the current partition
         current_partition[move['image_id']] = move['new_group']
 
@@ -304,6 +305,7 @@ def compare_trial(trial_id, move_probability):
 Function: run_all_trials
 Gathers all trial ids from the database and runs them all through compare_trial, saving the results out into a file.
 """
+
 def run_all_trials():
     # runs all the trials and writes out all data into a json string saved to results.json
     trials = db.get_all_trials()
@@ -324,6 +326,63 @@ def run_all_trials():
 
         trial = compare_trial(trial["_id"], move_probability)
 
+        # clean the trial so that it is serializable
+        trial['_id'] = str(trial['_id'])
+        trial['image_set'] = str(trial['image_set'].id)
+        trial.pop('init_state')
+
+        endTime = time.time()
+        totalTime = endTime - startTime
+        print "Completed trial", trialNum, "in", totalTime, "seconds"
+        print ""
+        times.append(totalTime)
+        trialNum += 1
+
+    # print out some information about the calculation
+    print "Done!"
+    print "Average time per trial: ", sum(times)/totalTrialNum, "seconds"
+    print "The following trials were smaller than expected: "
+    for key, value in smallTrials.iteritems():
+        print "\tTrial", key, "with", value, "moves"
+
+    # find a results file that does not yet exist
+    base = "./results"
+    name = base
+    number = 0
+    while os.path.exists(name + ".json"):
+        name = base + str(number)
+        number += 1
+    print "Saving results in", name, ".json"
+    f = open(name + ".json", 'w')
+    json.dump(trials, f)
+    f.close()
+
+def run_all_turk_trials():
+    # runs all the trials and writes out all data into a json string saved to results.json
+    trials = db.get_all_turk_trials()
+    trialsData = {}
+
+    # bits and pieces to let us print out something interesting
+    trialNum = 0
+    totalTrialNum = len(trials)
+    times = []
+    smallTrials = {};
+
+    # the main loop that analyzes each trial also check time to run and whether the trial is shorter than expected
+    for trial in trials:
+        if len(trial['moves']) < 40:
+            smallTrials[trial["_id"]] = len(trial['moves']);
+        startTime = time.time()
+        print "Runnning trial", trialNum, "of", totalTrialNum
+
+        trial = compare_trial(trial["_id"], move_probability)
+
+        # clean the trial so that it is serializable
+        trial['_id'] = str(trial['_id'])
+        trial['image_set'] = str(trial['image_set'].id)
+        trial.pop('init_state')
+
+        # print out something interesting
         endTime = time.time()
         totalTime = endTime - startTime
         print "Completed trial", trialNum, "in", totalTime, "seconds"
@@ -372,7 +431,7 @@ def run_all_trials_for_params():
     f = open(name + ".json", 'w')
     json.dump(trials, f)
     f.close()
-
+    
 def run_trial_for_params(trial_id):
     trial = db.get_trial(trial_id);
     print "Starting...";
@@ -551,7 +610,7 @@ def find_params_for_move(current_partition, move):
         params, prob, all_probs = sample_var_conf(current_partition, move, time_elapsed, params, all_probs)
         # sample disp
         params, prob, all_probs = sample_disp(current_partition, move, time_elapsed, params, all_probs)
-        print "Sample", i, ":", str(params)
+        print "Sample", j, ":", str(params)
         print "Resulting probability:", str(prob)
 
         # save the sample we just generated
