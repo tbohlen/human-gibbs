@@ -1,23 +1,38 @@
-\section*{Experimental Design}
+\section*{Experimental Methods}
 The task that trial subjects were faced with was designed to facilitate
-comparison between the subjects' decisions those that would be made by a
-Bayesian algorithm. Modeling a sequential online categorization was useful both
+comparison between the subjects' decisions and those that would be made by a
+particle filter. Modeling sequential, online category learning was useful both
 because that was the type of categorization algorithm developed in previous
-work, and because it had a straightforward manifestation in a constrained human
+work, and because it has a straightforward manifestation in a constrained human
 task. Trial subjects were presented with stimuli images, sequentially, and asked
-to sort each image as it appeared into a group. Once the image was placed in a
-group, the subject was not allowed to switch the image to another group.  The
-instructions given to each subject can be viewed in the Appendix, Figure
-\ref{fig:instructions}. 
+to assign each image into a group. Once the image was placed in a group, the
+subject was not allowed to switch the image to another group. The instructions
+given to each subject can be viewed in the Appendix, Figure
+\ref{fig:instructions}.
 
-The stimuli used were 10-by-10 pixelated images. Each pixel-block in the image
-was a colored between white and black, with 256 possible grayscale values. These
-type of images were chosen to both make the task difficult for the human subject and
-to make the input data directly interpretable for the inference algorithm.
-Figure \ref{fig:clusterer} shows a mostly completed trial.
+The stimuli used were smoothed, square, 10-by-10 pixel-blocks images. A sample
+stimulus can be viewed in Figure \ref{fig:stimulus}. Each pixel-block in an
+image is a shade of gray between white and black, with 256 possible grayscale
+values. This type of stimuli is convenient because it is directly interpretable
+for the inference algorithm: each pixel-block is a feature, and each feature can
+take one of 256 possible values. This type of stimuli was also considered
+attractive because of the difficulty for the human subject of categorizing the
+images. It was thought that this difficulty would compel the subjects to rely on
+subconscious processes for categorization. In retrospect, as is addressed in
+Section \ref{sec:discussion}, the high dimensionality of the images may have
+made it too difficult for the brain to categorize the images effectively, and
+may have lessened the interpretive power of the results. Figure
+\ref{fig:clusterer} shows how the interface would appear for a mostly completed trial.
 
-Workers on Mechanical Turk were hired to be trial subjects. They were presented
-with a website to conduct the trial on: each worker was first shown the
+\begin{figure}
+\centering
+\includegraphics[scale=1]{img/stimulus.png}
+\label{fig:stimulus}
+\caption{A sample stimulus to be categorized.}
+\end{figure}
+
+Workers from Mechanical Turk were hired to be trial subjects. They were presented
+with a website on which to conduct the trial: each worker was first shown the
 instruction page in Figure \ref{fig:instructions}, and then were brought to the
 page on which the trial was conducted, show in Figure \ref{fig:clusterer}  All
 the actions performed by the subject were collected in a database to be used for

@@ -1,10 +1,28 @@
 \section*{Introduction}
 
-Start with explaining category learning, including its importance in artificial
-intelligence systems and its relation to human cognitive development. Using the
-context of the original work by Anderson, and the further work by Sanborn,
-Griffiths, and Navarro, introduce the concept of the experiment.
+Rational analyses of human cognition seek to explain and quantify human behavior
+and thought processes under the assumption that they are an optimal adaptation
+to the constraints of the environment. Anderson \cite{anderson1991} argues that
+categorization is a basic function of human cognitive processes, and that
+Bayesian statistical inference is a theoretically motivated and effective model
+for human categorization. Sanborn, Griffiths, and Navarro \cite{sanborn2010}
+further investigate Bayesian algorithms for category learning, finding a
+single-particle particle filter to be most effective, and most similar to human behavior.
 
-To extend upon the previous work concerning particle filters and category learning, this experiment analyzes each individual move made by a human while sorting data, rather than simply analyzing the end result.
+To extend upon the previous work concerning particle filters and category
+learning, this experiment analyzes each individual move made by a human while
+sorting data, rather than simply analyzing the end result.
 
-There are two hypothetical although quite appealing arguments for this more fine-grained approach. First, a single end sort can be achieved by a number of paths exponential in the size of the largest category. Analyzing the process step by step allows access to this vast amount of missed information, assuming it can be analyzed in some useful way. In this way, move-by-move analysis is an exponentially tougher test for human inference models. Secondly, by comparing the human and machine category learning at each step, a given machine inference algorithm could be decisively shown not to model all human logic being applied to the given problem if the parameters to the algorithm that result in the most "human" action vary from move to move. Phrased another way, any variation in the most "human" parameters indicates that the humans had to apply additional logic to modify his/her internal model of the system, and so the inference model in question is missing some human reasoning.
+There are two hypothetical although quite appealing arguments for this more
+fine-grained approach. First, a single end sort can be achieved by a number of
+paths exponential in the size of the largest category. Analyzing the process
+step by step allows access to this vast amount of missed information, assuming
+it can be analyzed in some useful way. In this way, move-by-move analysis is an
+exponentially tougher test for human inference models. Secondly, by comparing
+the human and machine category learning at each step, a given machine inference
+algorithm could be decisively shown not to model all human logic being applied
+to the given problem if the parameters to the algorithm that result in the most
+"human" action vary from move to move. Phrased another way, any variation in the
+most "human" parameters indicates that the humans had to apply additional logic
+to modify his/her internal model of the system, and so the inference model in
+question is missing some human reasoning.

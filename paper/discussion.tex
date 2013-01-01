@@ -1,7 +1,10 @@
 \section*{Discussion}
+\label{sec:discussion}
 
 More full discussion of the results, with more allowances for speculative
 analysis.  Potential directions for future work.  Unanswered questions
+
+Some potential issues are listed below:
 
 Since each pixel is directly treated as a feature, the assumption of
 independence of the features does not fit well with how human beings will
@@ -10,3 +13,21 @@ pixelated images, and passing the extracted features the particle filter.  The
 feature extraction could be designed such that feature independence assumption
 would safely be valid for humans. Alternatively, the likelihood model could be
 modified to account for possible covariance between dimensions.
+
+Could have been some issues with the underlying probability
+distributions:
+\begin{itemize}
+\item problems with discretizing the student's T distribution? Assumed to be an
+  acceptable approximation of a continuous distribution to a discrete domain
+\item limiting the number of groups to 8 groups without quantifying this in the
+  prior probability distribution over groups
+\end{itemize}
+
+Layout could have biased choices (older choices covered up by newer ones,
+longer drags are performed less often, knew there would only be 8 groups
+allowed, group boxes all fixed in size -> trying to make groups approximately
+the same size, knowing how many stimuli needed to be categorized may have
+allowed people to preplan group sizes, etc) NOTE: we probably shouldn't include
+all of these, but there are just what came to my head haha
+
+Checking the data to make sure the Turkers didn't do junk trials

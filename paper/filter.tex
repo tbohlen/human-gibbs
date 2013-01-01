@@ -1,6 +1,6 @@
 \section*{Particle Filter}
-The algorithm implemented was based on the particle filter described by Sanborn,
-Griffiths, and Navarro\cite{sanborn2010}. Justification for the use of a
+The algorithm implemented was based on the single-particle particle filter
+described by Sanborn et al\cite{sanborn2010}. Justification for the use of a
 particle filter to perform probabilistic inference for sequential clustering can
 be found in that paper, in addition to a development of the models used to build
 this particle. Presented below is only a brief description of the underlying
@@ -100,7 +100,10 @@ P(\vec{X}_i = \vec{x}_i | z_i = k,  \vec{z}_{i-1}) =  \prod_d P(X_{i,d} =
 x_{i,d} | z_i = k,  \vec{z}_{i-1})
 \end{equation}
 
-
+Additionally, the particle filter was only allowed to create 8 groups, to match
+this limitation that was placed on human subjects.  The restriction was enacted
+by not allowing the particle filter to consider placing a stimulus into a new
+group after 8 groups had already been created.
 
 \begin{table}
 \centering
