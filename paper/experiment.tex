@@ -11,8 +11,8 @@ subject was not allowed to switch the image to another group. The instructions
 given to each subject can be viewed in the Appendix, Figure
 \ref{fig:instructions}.
 
-The stimuli used were smoothed, square, 10-by-10 pixel-block images. A sample
-stimulus can be viewed in Figure \ref{fig:stimulus}. Each pixel-block in an
+The stimuli used were 100 by 100 pixel images. A sample
+stimulus can be viewed in Figure \ref{fig:stimulus}. Each pixel in an
 image is a shade of gray between white and black, with 256 possible grayscale
 values. This type of stimuli is convenient because it is directly interpretable
 for the inference algorithm: each pixel-block is a feature, and each feature can
@@ -28,7 +28,9 @@ may have lessened the interpretive power of the results. Figure
 \begin{figure}
 \centering
 \includegraphics[scale=1]{img/stimulus.png}
-\caption{A sample stimulus to be categorized.}
+\caption{A sample stimulus to be categorized. The stimuli were generated from
+  10 by 10 matrices of values between 0 and 255, where the value determined the
+  grayscale value. The images were smoothed.}
 \label{fig:stimulus}
 \end{figure}
 

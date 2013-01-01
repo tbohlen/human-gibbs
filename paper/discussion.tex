@@ -24,7 +24,7 @@ experiments could also use more structured images which would be more easily
 interpreted by the subjects, and, therefore, potentially result in better data.
 
 The particle filter likelihood calculation involved the discretization of a
-student's T distribution via discrete sampling of a continuous student's T
+Student's $t$ distribution via discrete sampling of a continuous Student's $t$
 distribution followed by a normalization of these samples. This method may not
 be an acceptable mapping of the continuous function to a discrete domain.
 Additionally, the lack of any quantification of the 8-group cap in the prior
@@ -52,8 +52,12 @@ offer a tougher text for Baysian categorization models, as mentioned in the
 introduction, and so further use of this technique seems prudent.
 
 One final, although quite interesting, potential direction for further
-experiments was mentioned briefly in Section \ref{sec:intro}. A machine inference
-algorithm could be decisively shown to exclude some logic that a human
+experiments involves investigating the parameters used in the model. 
+A machine inference algorithm could be decisively shown to exclude some logic that a human
 categorizer is using if the parameters that result in the best fit between a
-human's decision and the algorithm's decision vary too much form move to move.
+human's decision and the algorithm's decision vary significantly from move to move.
+Such analysis seems valuable to pursue in future experiments. Phrased
+another way, significant variation in the best fit parameters indicates that the
+humans had to apply additional logic to modify his internal model of the
+system, and so the inference model in question is missing some human reasoning.
 Such analysis seems valuable to pursue in future experiments.
