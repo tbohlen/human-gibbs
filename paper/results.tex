@@ -1,45 +1,46 @@
-\section*{Results}
+\section{Results}
 \label{sec:results}
 
 62 mechanical-turk trial results were analyzed, giving a total of 2480 moves.
-The probability with which the particle filter would choose the same group that
-the human did was recorded. The mean of these $2480$ log probabilities was an
-unimpressive $-1379.256$, and the median was $-29.612$.
+For each move, the probability assigned by the particle filter to the
+categorization decision made by the subject was recorded. The mean of these
+$2480$ log probabilities was an unimpressive $-1379.256$, and the median was
+$-29.612$.
 
 The three histograms in figures \ref{fig:fullhist}, \ref{fig:smallhist}, and
-\ref{fig:cumulativehist}, though, show that $48.9%$ of the
-log probabilities were greater than $-0.25$ and $51.5%$ were greater than
+\ref{fig:cumulativehist}, though, show that $48.9\%$ of the
+log probabilities were greater than $-0.25$ and $51.5\%$ were greater than
 $-1.0$. $1216$ moves saw the particle filter inference algorithm assigning
-probabilities greater than $0.5$ to the categorization selected by the human,
-and the average move involved a choice between $4.929$ groups, making $20.286%$
-success rate equivalent to chance. The particle filter model, therefore, agreed
-with human data at least $49.032%$ of the time, performing far better than
-chance.
+probabilities (\emph{not} log probabilites) greater than $0.5$ to the categorization selected by the human,
+indicating that the particle filter model used in this experiment agreed with
+the human data at least $49.032\%$ of the time. The average move involved a
+choice between $4.929$ groups, making a $20.286\%$ success rate equivalent to
+chance, and showing that the particle filter performed far better than chance.
 
 \begin{figure}
 \centering
-\includegraphic[scale=1]{img/hist0.png}
-\label{fig:fullhist}
+\includegraphics[scale=0.75]{img/hist0.png}
 \caption{A histogram showing the log probability of the particle filter making
 the same move as the human for each of the 2480 human moves.}
+\label{fig:fullhist}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphic[scale=1]{img/hist4.png}
-\label{fig:smallhist}
+\includegraphics[scale=0.75]{img/hist4.png}
 \caption{A histogram showing the log probability of the particle filter making
 the same move as the human for each of the moves for which this value was
 greater than $-500$. This is a zoomed in view, so to speak, of
 \ref{fig:fullhist}.}
+\label{fig:smallhist}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphic[scale=1]{img/hist8.png}
-\label{fig:cumulativehist}
-\caption{A histogram showing the log probabilitt of the particle filter making
+\includegraphics[scale=0.75]{img/hist8.png}
+\caption{A histogram showing the log probability of the particle filter making
 the same move as the human for each of the 2480 human moves, but with all moves
 for which this value was less than $-9$ grouped into the lowest probability bin.}
+\label{fig:cumulativehist}
 \end{figure}
 

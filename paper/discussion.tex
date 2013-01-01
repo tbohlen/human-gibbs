@@ -1,33 +1,59 @@
-\section*{Discussion}
+\section{Discussion}
 \label{sec:discussion}
 
-More full discussion of the results, with more allowances for speculative
-analysis.  Potential directions for future work.  Unanswered questions
+The results of this experiment indicated promise for Baysian models, and, in particle, particle
+filter models, of human cognition, which was to be expected considering the work
+by Anderson, Sanborn, Griffiths, and Navarro supporting this belief. That said,
+the $49.032\%$ success rate was very promising but hardly conclusive evidence
+that a particle filter model could accurately model the human cognitive process.
+Further analysis of the data presented here, as well as a number of refined
+studies suggested below would be necessary to strengthen this claim.
 
-Some potential issues are listed below:
+The error in the particle filter selection process, when compared to human data,
+could be the result of a number of errors or incorrect assumptions. The particle
+filter treated each pixel of the $100$ by $100$ pixel images as a feature, presenting
+two potential problems. First, this extremely high dimensionality may have been
+the reason for the tendency of the filter to assign a probability of nearly $1$
+on its top choice, and probability of nearly $0$ to all other choices.
 
-Since each pixel is directly treated as a feature, the assumption of
-independence of the features does not fit well with how human beings will
-perceive images.  This could be remedied by performing feature extraction on the
-pixelated images, and passing the extracted features the particle filter.  The
-feature extraction could be designed such that feature independence assumption
-would safely be valid for humans. Alternatively, the likelihood model could be
-modified to account for possible covariance between dimensions.
+More worryingly, such a treatment of the image does not fit well with a human's
+tendency to extract features, even from such relatively featureless images. In
+future this could be remedied by performing a feature extraction or simply
+including in the likelihood model a covariance between dimensions. Future
+experiments could also use more structured images which would be more easily
+interpreted by the subjects, and, therefore, potentially result in better data.
 
-Could have been some issues with the underlying probability
-distributions:
-\begin{itemize}
-\item problems with discretizing the student's T distribution? Assumed to be an
-  acceptable approximation of a continuous distribution to a discrete domain
-\item limiting the number of groups to 8 groups without quantifying this in the
-  prior probability distribution over groups
-\end{itemize}
+The particle filter likelihood calculation involved the discretization of a
+student's T distribution via discrete sampling of a continuous student's T
+distribution followed by a normalization of these samples. This method may not
+be an acceptable mapping of the continuous function to a discrete domain.
+Additionally, the lack of any quantification of the 8-group cap in the prior
+probability distribution could have caused error.
 
-Layout could have biased choices (older choices covered up by newer ones,
-longer drags are performed less often, knew there would only be 8 groups
-allowed, group boxes all fixed in size -> trying to make groups approximately
-the same size, knowing how many stimuli needed to be categorized may have
-allowed people to preplan group sizes, etc) NOTE: we probably shouldn't include
-all of these, but there are just what came to my head haha
+Another possible source of error, which should be considered in all experiments
+using web interfaces and paid participants, was the interface itself. The fact
+that images layered on top of one another when added to the same group may have
+skewed the human categorization behavior and perception of the groups. A future
+experiment that presents half of the subjects with the average of all image in a group,
+and all others with each individual image in a group and analyzed the resulting
+categorization data for biases could help determine if this is a valid concern.
+Other subtle interface decisions, such as the fixed area of the group boxes presented
+on the web interface could have further biased the data and should be considered
+carefully in future experiments. Additionally, a subset of the samples generated
+from Mechanical Turk should always be checked to make sure the subjects did not
+create "junk" trials simply to win their pay.
 
-Checking the data to make sure the Turkers didn't do junk trials
+Despite these many concerns, this study did show that comparing human
+categorization to a Baysian categorization model on a move by move basis is both
+feasible and worthwhile.  The particle filter took approximately twelve hours to
+analyze all 2480 individual moves on a 2.2Ghz Intel Core i7 processor, and
+required around 100MB of memory to do so. Move-by-move analysis does indeed
+offer a tougher text for Baysian categorization models, as mentioned in the
+introduction, and so further use of this technique seems prudent.
+
+One final, although quite interesting, potential direction for further
+experiments was mentioned briefly in Section \ref{sec:intro}. A machine inference
+algorithm could be decisively shown to exclude some logic that a human
+categorizer is using if the parameters that result in the best fit between a
+human's decision and the algorithm's decision vary too much form move to move.
+Such analysis seems valuable to pursue in future experiments.
