@@ -160,8 +160,9 @@ loads an image from the path provided. Downsamples by a factor of 9 to make imag
 
 Parameters:
 path - the path to the image to be loaded
+downsample - an integer indicating how much to downsample the image. A value of 1 indicates no downsampling
 """
-def loadImage(path):
+def loadImage(path, downsample=1):
     baseImage = Image.open(path)
     pixelObj = baseImage.load()
     size = baseImage.size
@@ -175,9 +176,27 @@ def loadImage(path):
             if baseImage.mode == "1":
                 newColumn.append(pixel)
             else:
-                newColumn.append(sum(pixelObj[i, j])/3.0)
+                newColumn.append(sum(pixelObj[i, j])/3.0) # we are not dealing with grayscale, but instead a color image
         matrix.append(newColumn)
-    return matrix
+
+    # downsample, if required
+    # this is messy. if downsample does not divide the image size, the extra pixels are just thrown away
+    # TODO: fix the above error
+    downsampleMatrix = []
+    if downsample > 1:
+        for i in range(int(floor(size[0]/downsample))):
+            newColumn = []
+            for j in range(int(floor(size[1]/downsample))):
+                pixelSum = 0
+                for k in range(downsample):
+                    for l in range(downsample):
+                        pixelSum += matrix[i*downsample+k][j*downsample+l]
+                newColumn.append(int(floor(pixelSum/(downsample**2))))
+            downsampleMatrix.append(newColumn)
+    else:
+        downsampleMatrix = matrix
+
+    return downsampleMatrix
 
 """
 Function: saveMatrixAsImage
