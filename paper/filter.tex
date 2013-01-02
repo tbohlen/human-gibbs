@@ -12,9 +12,9 @@ The posterior probability that a stimulus is assigned to a group is proportional
 to a prior probability multiplied by a likelihood, as is always the case with
 Bayesian inference. The prior probability encodes a preference over group sizes:
 relatively how large groups should be, when new groups should be created, etc.
-This prior must protect against overfitting, which in this context of category
-learning would be creating a new category for each slightly different stimulus.
-The likelihood function encodes the probability that the stimulus is drawn from
+This prior must protect against overfitting, which in the context of category
+learning would be creating a new categories for stimuli that should have been
+grouped together. The likelihood function encodes the probability that the stimulus is drawn from
 the same cluster that produced the stimuli already in the cluster. Using
 primarily the same notation as Sanborn et al., this proportionality is represented by
 \begin{equation}
@@ -31,10 +31,9 @@ In Equation \ref{eq:posterior}, $P(\vec{X}_i =
 \vec{z}_{i-1})$ represents the prior.
 
 A Dirichlet process models the prior distribution over the probability that
-any given input stimuli will be grouped with a given cluster, whether that is one
+any input stimuli will be grouped with a given cluster, whether that is one
 of the existing clusters or would be a new cluster. This results in the
 following form for the prior probability:
-
 \begin{equation}
 P(z_i = k | \vec{z}_{i-1}) = 
 \begin{cases}
@@ -42,7 +41,6 @@ P(z_i = k | \vec{z}_{i-1}) =
   \frac{\alpha}{i - 1 + \alpha} & M_k = 0 \\
 \end{cases}
 \end{equation}
-
 $M_k$ is the number of stimuli in group $k$ after the previous $i - 1$ stimuli
 had been sorted. This says the probability that the $i^{th}$ stimulus is placed
 in group $k$ is proportional to the number of stimuli already in group $k$, or
