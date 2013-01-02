@@ -1,10 +1,10 @@
 \section{Particle Filter}
 \label{sec:filter}
-The algorithm implemented was based on the single-particle particle filter
-described by Sanborn et al\cite{sanborn2010}. Justification for the use of a
+The algorithm implemented is based on the single-particle particle filter
+described by Sanborn et al.\cite{sanborn2010} Justification for the use of a
 particle filter to perform probabilistic inference for sequential clustering can
-be found in that paper, in addition to a development of the models used to build
-this particle. Presented below is only a brief description of the underlying
+be found in their paper, in addition to a development of the models assumed for
+this filter. Presented below is only a brief description of the underlying
 probability distributions used, in addition to the modifications required to
 tailor the particle filter to this experiment.
 
@@ -15,20 +15,18 @@ relatively how large groups should be, when new groups should be created, etc.
 This prior must protect against overfitting, which in this context of category
 learning would be creating a new category for each slightly different stimulus.
 The likelihood function encodes the probability that the stimulus is drawn from
-the same cluster that produced the stimuli already in the cluster. Using the
-primarily the same notation as the Sanborn et al. paper, the prior takes the
-form, this proportionality is represented by
-
+the same cluster that produced the stimuli already in the cluster. Using
+primarily the same notation as Sanborn et al., this proportionality is represented by
 \begin{equation}
 P(z_i = k | \vec{X}_i = \vec{x}_i,  \vec{z}_{i-1}) \propto  P(\vec{X}_i =
 \vec{x}_i | z_i = k,  \vec{z}_{i-1}) P(z_i = k | \vec{z}_{i-1})
 \label{eq:posterior}
 \end{equation}
-
-where $z_i = k$ notates assigning the $i^{th}$ stimulus to group $k$, $\vec{z}_{i-1}$ refers to
-the assignment of groups that the previous $i - 1$ stimuli have gone through,
-and $M_k$ is the number of stimuli in group $k$ after the previous $i - 1$
-stimuli had been sorted. In Equation \ref{eq:posterior}, $P(\vec{X}_i =
+$z_i = k$ notates assigning the $i^{th}$ stimulus to group $k$. $\vec{z}_{i-1}$ refers to
+the categorization of the previous $i - 1$ stimuli. $\vec{X}_i$ is a random
+variable for the $i^{th}$ stimulus, and $\vec{X}_i = \vec{x}_i$ notates the
+random variable $\vec{X}_i$ taking the value $\vec{x}_i$. 
+In Equation \ref{eq:posterior}, $P(\vec{X}_i =
 \vec{x}_i | z_i = k,  \vec{z}_{i-1})$ represents the likelihood and $P(z_i = k |
 \vec{z}_{i-1})$ represents the prior.
 
@@ -45,13 +43,14 @@ P(z_i = k | \vec{z}_{i-1}) =
 \end{cases}
 \end{equation}
 
-This says the probability that the $i^{th}$ stimulus is placed in group $k$ is
-proportional to the number of stimuli already in group $k$, or to a parameter of
-the Dirichlet process, $\alpha$, if group $k$ would be a new group.  $\alpha$ is the dispersion parameter of the Dirichlet
-process; the larger $\alpha$, the larger the probability that a stimulus will be
-assigned to a new group. The value used for this parameter, as well as the
-values used for other parameters of the particle filter, can be found in Figure
-\ref{tab:parameters}. 
+$M_k$ is the number of stimuli in group $k$ after the previous $i - 1$ stimuli
+had been sorted. This says the probability that the $i^{th}$ stimulus is placed
+in group $k$ is proportional to the number of stimuli already in group $k$, or
+to a parameter of the Dirichlet process, $\alpha$, if group $k$ would be a new
+group. $\alpha$ is the dispersion parameter of the Dirichlet process; the larger
+$\alpha$, the larger the probability that a stimulus will be assigned to a new
+group. The value used for this parameter, as well as the values used for other
+parameters of the particle filter, can be found in Table \ref{tab:parameters}.
 
 The likelihood model for a stimulus being in a given group assumes that each
 feature in a group follows a Gaussian distribution. The prior on the variance of
@@ -83,16 +82,16 @@ stimuli. $M_k$ is again the number of elements in group $k$, but in this
 instance assuming that the $i^{th}$ stimulus has been added to group $k$. The
 prior mean is $\mu_0$, and the prior variance is $\sigma_0^2$, and the
 confidences in the prior mean and prior variance are $\lambda_0$ and $a_0$,
-respectively. $\mu_0$ is set to midpoint of the potential values for each feature,
+respectively. $\mu_0$ is set to the midpoint of the potential values for each feature,
 and $\sigma_0$ is set to be $1/8^{th}$ the range of the potential values.
 
-The input were 100 by 100 pixel images, with each pixel taking on a grayscale
-value between 0 and 255. Each feature was treated as an independent feature.
-Because the range for each feature was limited and discrete, the Student's $t$
-distribution was discretized and renormalized along the valid range of the
-feature each time a feature likelihood value was calculated. 
+The input are 100 by 100 pixel images, with each pixel taking on a grayscale
+value between 0 and 255. Because the range for each feature is limited and
+discrete, the Student's $t$ distribution was discretized and renormalized along
+the valid range of the feature each time a feature likelihood value was
+calculated.
 
-In order to match the methodology used by Sanborn et. al, the features are
+In order to match the methodology used by Sanborn et al., the features are
 treated as being independently distributed, so the likelihood for the entire
 stimulus is simply a product over all the feature likelihoods:
 
@@ -116,13 +115,10 @@ $\lambda_0$ & $0.5$ \\
 $\sigma_0$ & $32$ \\
 $a_0$ & 2.0 \\
 \end{tabular}
-\label{tab:parameters}
 \caption{The parameters used for the particle filter. $\alpha$ is the dispersion
 parameter for the Dirichlet process prior. $\mu_0$ and $\sigma_0$ are the mean
 and standard deviation of the prior Gaussian distribution over each feature, and
 $\lambda_0$ and $a_0$ are the confidence in the prior mean and the confidence in the
 prior variance, respectively.}
+\label{tab:parameters}
 \end{table}
-
-
-
