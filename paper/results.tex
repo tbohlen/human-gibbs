@@ -2,8 +2,8 @@
 \label{sec:results}
 
 62 mechanical-turk trial results were analyzed, giving a total of 2480 moves.
-For each move, the probability assigned by the particle filter to the
-categorization decision made by the subject was recorded. The mean of these
+For each move, the log probability assigned by the particle filter to the
+categorization decision made by the human subject was recorded. The mean of these
 $2480$ log probabilities was an unimpressive $-1379.256$, and the median was
 $-29.612$.
 
@@ -18,8 +18,9 @@ time. The average move involved a choice between $4.929$ groups, making a
 $20.286\%$ success rate equivalent to chance, and showing that the particle
 filter performed far better than chance. Additionally, the average move for
 which the particle filter agreed with human data involved a choice between
-$4.258$ groups, indicating that the particle filter performed only slightly
-worse, on average, on decisions between involving more groups.
+$4.258$ groups, allowing the conclusion that the particle filter performed only slightly
+worse, on average, when presented with a decision between a high number of
+groups.
 
 \begin{figure}
 \centering
