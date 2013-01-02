@@ -1,13 +1,14 @@
 \section{Discussion}
 \label{sec:discussion}
 
-The results of this experiment indicated promise for Baysian models, and, in particle, particle
-filter models, of human cognition, which was to be expected considering the work
-by Anderson, Sanborn, Griffiths, and Navarro supporting this belief. That said,
-the $49.032\%$ success rate was very promising but hardly conclusive evidence
-that a particle filter model could accurately model the human cognitive process.
-Further analysis of the data presented here, as well as a number of refined
-studies suggested below would be necessary to strengthen this claim.
+The results of this experiment indicated promise for Baysian models, and, in
+particular, particle filter models, of human cognition, which was to be expected
+considering the work by Anderson, Sanborn, Griffiths, and Navarro supporting
+this belief. That said, the $49.032\%$ success rate was very promising but
+hardly conclusive evidence that a particle filter model could accurately model
+the human cognitive process. Further analysis of the data presented here, as
+well as more refined studies, some of which are suggested below, would be
+necessary to strengthen this claim.
 
 The error in the particle filter selection process, when compared to human data,
 could be the result of a number of errors or incorrect assumptions. The particle
@@ -16,12 +17,13 @@ two potential problems. First, this extremely high dimensionality may have been
 the reason for the tendency of the filter to assign a probability of nearly $1$
 on its top choice, and probability of nearly $0$ to all other choices.
 
-More worryingly, such a treatment of the image does not fit well with a human's
-tendency to extract features, even from such relatively featureless images. In
-future this could be remedied by performing a feature extraction or simply
-including in the likelihood model a covariance between dimensions. Future
-experiments could also use more structured images which would be more easily
-interpreted by the subjects, and, therefore, potentially result in better data.
+Secondly, and more worryingly, such a treatment of the image does not fit well
+with a human's tendency to extract features, even from such relatively
+featureless images. In future this could be remedied by performing a feature
+extraction or simply including in the likelihood model a covariance between
+dimensions. Future experiments could also use more structured images which would
+be more easily interpreted by the subjects, and, therefore, potentially result
+in better data.
 
 The particle filter likelihood calculation involved the discretization of a
 Student's $t$ distribution via discrete sampling of a continuous Student's $t$
